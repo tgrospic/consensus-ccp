@@ -1,0 +1,21 @@
+[package]
+name = "ccp-leader"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Leader specification for consensus as collapse policy"
+readme = "README.md"
+
+[dependencies]
+anyhow.workspace = true
+ccp_core.workspace = true
+ccp_quorum.workspace = true
+derive-new.workspace = true
+alux-ext.workspace = true
+
+[lints]
+workspace = true
