@@ -1,0 +1,18 @@
+[package]
+name = "consensus-ccp-examples"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Executable comparisons for the CCP specification"
+license.workspace = true
+publish = false
+
+[dependencies]
+ccp.workspace = true
+ccp_runtime.workspace = true
+
+[lints]
+workspace = true
