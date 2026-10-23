@@ -1,0 +1,22 @@
+[package]
+name = "ccp-cordial"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Cordial specification for consensus as collapse policy"
+readme = "README.md"
+
+[dependencies]
+anyhow.workspace = true
+ccp_communication.workspace = true
+ccp_core.workspace = true
+ccp_leader.workspace = true
+ccp_quorum.workspace = true
+alux-ext.workspace = true
+
+[lints]
+workspace = true
