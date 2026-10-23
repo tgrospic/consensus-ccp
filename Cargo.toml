@@ -1,0 +1,57 @@
+[workspace]
+resolver = "2"
+members = ["ccp", "ccp-*", "crates/*"]
+default-members = ["ccp", "ccp-*"]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Tomislav Grospic <grospic@gmail.com>"]
+homepage = "https://github.com/tgrospic/consensus-ccp"
+repository = "https://github.com/tgrospic/consensus-ccp.git"
+description = "Consensus as collapse under communication evidence"
+license = "MIT"
+readme = "README.md"
+edition = "2024"
+rust-version = "1.97"
+
+[workspace.dependencies]
+anyhow = "1"
+ccp = { package = "consensus-ccp", path = "ccp", version = "0.1.0" }
+ccp_core = { package = "ccp-core", path = "ccp-core", version = "0.1.0" }
+ccp_quorum = { package = "ccp-quorum", path = "ccp-quorum", version = "0.1.0" }
+ccp_communication = { package = "ccp-communication", path = "ccp-communication", version = "0.1.0" }
+ccp_leader = { package = "ccp-leader", path = "ccp-leader", version = "0.1.0" }
+ccp_confidence = { package = "ccp-confidence", path = "ccp-confidence", version = "0.1.0" }
+ccp_mysticeti = { package = "ccp-mysticeti", path = "ccp-mysticeti", version = "0.1.0" }
+ccp_cordial = { package = "ccp-cordial", path = "ccp-cordial", version = "0.1.0" }
+ccp_adaptive = { package = "ccp-adaptive", path = "ccp-adaptive", version = "0.1.0" }
+ccp_dense_leader = { package = "ccp-dense-leader", path = "ccp-dense-leader", version = "0.1.0" }
+ccp_nakamoto = { package = "ccp-nakamoto", path = "ccp-nakamoto", version = "0.1.0" }
+ccp_scenarios = { package = "ccp-scenarios", path = "ccp-scenarios" }
+ccp_comparison = { package = "ccp-comparison", path = "ccp-comparison" }
+ccp_runtime = { package = "consensus-ccp-runtime", path = "crates/ccp-runtime", version = "0.1.0" }
+derive_more = { version = "2", features = ["display"] }
+derive-new = "0.7"
+alux-ext = "0.2"
+
+[workspace.lints.rust]
+missing_docs = "warn"
+unsafe_code = "forbid"
+
+[workspace.lints.rustdoc]
+broken_intra_doc_links = "deny"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+must_use_candidate = "allow"
+
+[workspace.metadata.release]
+push = true
+tag = true
+allow-branch = ["master"]
+sign-commit = true
+sign-tag = true
+consolidate-commits = true
+pre-release-commit-message = "chore: release"
