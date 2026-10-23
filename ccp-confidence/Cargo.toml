@@ -1,0 +1,18 @@
+[package]
+name = "ccp-confidence"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Confidence specification for consensus as collapse policy"
+readme = "README.md"
+
+[dependencies]
+anyhow.workspace = true
+alux-ext.workspace = true
+
+[lints]
+workspace = true
