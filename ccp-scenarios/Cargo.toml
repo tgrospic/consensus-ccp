@@ -1,0 +1,20 @@
+[package]
+name = "ccp-scenarios"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+description = "Scenarios specification for consensus as collapse policy"
+readme = "README.md"
+
+[dependencies]
+alux-ext.workspace = true
+ccp_cordial.workspace = true
+ccp_mysticeti.workspace = true
+
+[lints]
+workspace = true
