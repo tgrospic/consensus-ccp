@@ -1,0 +1,33 @@
+[package]
+name = "consensus-ccp-tests"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Concrete conformance runners for CCP interpreters"
+license.workspace = true
+publish = false
+
+[lib]
+name = "ccp_tests"
+
+[dependencies]
+anyhow.workspace = true
+ccp_communication.workspace = true
+ccp_comparison.workspace = true
+ccp_confidence.workspace = true
+ccp_cordial.workspace = true
+ccp_core.workspace = true
+ccp_dense_leader.workspace = true
+ccp_leader.workspace = true
+ccp_mysticeti.workspace = true
+ccp_nakamoto.workspace = true
+ccp_quorum.workspace = true
+ccp_runtime.workspace = true
+ccp_scenarios.workspace = true
+alux-ext.workspace = true
+
+[lints]
+workspace = true

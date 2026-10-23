@@ -1,0 +1,5 @@
+use crate::test_runner::ccp_test;
+use ccp_scenarios::MysticetiScenariosExt;
+
+ccp_test!(mysticeti_direct_commit_is_derived_from_reachable_messages);
+ccp_test!(mysticeti_indirect_repair_requires_a_visible_decision_round_certificate);

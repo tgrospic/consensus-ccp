@@ -1,0 +1,6 @@
+use crate::test_runner::ccp_test;
+use ccp_comparison::ComparisonScenariosExt;
+use ccp_scenarios::DenseLeaderScenariosExt;
+
+ccp_test!(dense_leader_collapse_is_derived_from_the_observers_reachable_history);
+ccp_test!(scheduled_dense_projection_respects_round_robin_and_wave_leader_slots);

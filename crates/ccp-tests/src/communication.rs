@@ -1,0 +1,6 @@
+use crate::test_runner::ccp_test;
+use ccp_scenarios::CommunicationScenariosExt;
+
+ccp_test!(rejected_input_preserves_the_reachable_history);
+ccp_test!(every_non_genesis_message_carries_previous_round_quorum);
+ccp_test!(carrier_retains_one_byzantine_equivocator_but_rejects_a_second);

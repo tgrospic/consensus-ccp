@@ -1,0 +1,8 @@
+use crate::test_runner::ccp_test;
+use ccp_comparison::ComparisonScenariosExt;
+use ccp_scenarios::CordialScenariosExt;
+
+ccp_test!(cordial_vocabulary_names_ratification_and_super_ratification);
+ccp_test!(cordial_and_mysticeti_share_the_positive_horizon_match);
+ccp_test!(cordial_finalized_leaders_form_the_complete_ratified_predecessor_chain);
+ccp_test!(cordial_runtime_commits_exactly_the_finalized_wave_leaders);
