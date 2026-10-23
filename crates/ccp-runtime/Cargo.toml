@@ -1,0 +1,29 @@
+[package]
+name = "consensus-ccp-runtime"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Constructive communication machine for the CCP consensus specification"
+license.workspace = true
+
+[lib]
+name = "ccp_runtime"
+
+[dependencies]
+ccp_communication.workspace = true
+ccp_confidence.workspace = true
+ccp_cordial.workspace = true
+ccp_core.workspace = true
+ccp_dense_leader.workspace = true
+ccp_leader.workspace = true
+ccp_mysticeti.workspace = true
+ccp_nakamoto.workspace = true
+ccp_quorum.workspace = true
+derive-new.workspace = true
+derive_more.workspace = true
+
+[lints]
+workspace = true
