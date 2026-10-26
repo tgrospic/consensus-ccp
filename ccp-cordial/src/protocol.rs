@@ -62,7 +62,8 @@ pub fn cordial_policy(first: u64, wave: u64) -> CordialPolicy {
 #[ext(name = CordialEvidenceExt)]
 pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
+    This:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
     W: Into<u128>,
     C: Clone + Eq + Hash,

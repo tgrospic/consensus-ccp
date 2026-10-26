@@ -15,7 +15,8 @@ where
     /// Checks that no proposer slot carries incompatible direct commit and skip evidence.
     fn check_mysticeti_direct_exclusivity<Evidence>(&self, evidence: &Evidence) -> Result<()>
     where
-        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S>
+        Evidence: HorizonMatch<C, C>
+            + ValidatorEvidence<MysticetiSkip, S>
             + ValidatorSet<Validator = V>
             + ValidatorWeight<Weight = W>,
         V: Eq + Hash,

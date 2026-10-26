@@ -12,9 +12,11 @@ use ccp_core::{
     VisibleDenotation,
 };
 use ccp_mysticeti::{MysticetiCertificateExt, MysticetiDagEvidence, mysticeti_policy};
-use ccp_validator::{QuorumThreshold, QuorumThresholdExt, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use ccp_quorum::{QuorumOf, WitnessSelection};
 use ccp_runtime::{CandidateId, Machine, ValidatorId};
+use ccp_validator::{
+    QuorumThreshold, QuorumThresholdExt, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight,
+};
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
 

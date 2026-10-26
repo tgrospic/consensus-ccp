@@ -54,7 +54,8 @@ where
 #[ext(name = CommonEvidenceExpectationExt)]
 pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
+    This:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
     C: Clone + Debug + Eq + Hash,
     W: Into<u128>,
@@ -132,7 +133,8 @@ where
 #[ext(name = CordialEvidenceExpectationExt)]
 pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
+    This:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
     C: Clone + Debug + Eq + Hash,
     W: Into<u128>,
@@ -174,7 +176,8 @@ where
 #[ext(name = MysticetiCertificateExpectationExt)]
 pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
+    This:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
     C: Clone + Debug + Eq + Hash,
     W: Into<u128>,

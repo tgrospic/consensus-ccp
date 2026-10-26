@@ -9,8 +9,8 @@ use ccp_core::{
     AllCandidates, CandidateSpace, Decision, EvidenceRelation, FixedDistance, FollowingBoundary, HorizonMatch,
 };
 use ccp_leader::{PeriodicRoundRobin, Policy};
-use ccp_validator::{TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use ccp_quorum::{CandidateSupport, QuorumOf, ValidatorEvidence, ValidatorQuorumExt};
+use ccp_validator::{TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_new::new as New;
 use std::hash::Hash;
 use std::marker::PhantomData;
@@ -30,7 +30,8 @@ pub type MysticetiCertificate<'a, Carrier, V> =
 #[ext(name = MysticetiCertificateExt)]
 pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
+    This:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
     W: Into<u128>,
     C: Clone + Eq + Hash,
@@ -141,10 +142,8 @@ where
 
 impl<Carrier, Schedule, V, W, C> HorizonMatch<C, C> for MysticetiDagEvidence<'_, Carrier, Schedule, C>
 where
-    Carrier: MessageCarrier<Validator = V, Message = C>
-        + MessageJustification
-        + ValidatorSet
-        + ValidatorWeight<Weight = W>,
+    Carrier:
+        MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     Schedule: FollowingBoundary<u64>,
     V: Clone + Eq + Hash,
     W: Into<u128>,
@@ -203,9 +202,7 @@ where
     /// Reports whether `slot` carries direct-skip evidence from more than 2/3.
     fn mysticeti_direct_skip<Evidence, V, W>(&self, evidence: &Evidence, slot: &S) -> bool
     where
-        Evidence: ValidatorEvidence<MysticetiSkip, S>
-            + ValidatorSet<Validator = V>
-            + ValidatorWeight<Weight = W>,
+        Evidence: ValidatorEvidence<MysticetiSkip, S> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
         V: Eq + Hash,
         W: Into<u128>,
     {
@@ -224,7 +221,8 @@ where
     /// Classifies one slot from the evidence view's skip and commit patterns.
     fn mysticeti_direct_decision<Evidence, V, W>(&self, evidence: &Evidence, slot: &S) -> Decision<S, C>
     where
-        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S>
+        Evidence: HorizonMatch<C, C>
+            + ValidatorEvidence<MysticetiSkip, S>
             + ValidatorSet<Validator = V>
             + ValidatorWeight<Weight = W>,
         V: Eq + Hash,
@@ -248,7 +246,8 @@ where
     /// Classifies one slot using direct evidence followed by ordered anchor repair.
     fn mysticeti_decision<Evidence, V, W>(&self, evidence: &Evidence, slot: &S) -> Decision<S, C>
     where
-        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S>
+        Evidence: HorizonMatch<C, C>
+            + ValidatorEvidence<MysticetiSkip, S>
             + ValidatorSet<Validator = V>
             + ValidatorWeight<Weight = W>,
         V: Eq + Hash,
@@ -278,7 +277,8 @@ where
     /// Returns the closed prefix under the supplied evidence view.
     fn mysticeti_closed_prefix<Evidence, V, W>(&self, evidence: &Evidence) -> Vec<Decision<S, C>>
     where
-        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S>
+        Evidence: HorizonMatch<C, C>
+            + ValidatorEvidence<MysticetiSkip, S>
             + ValidatorSet<Validator = V>
             + ValidatorWeight<Weight = W>,
         V: Eq + Hash,

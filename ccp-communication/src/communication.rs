@@ -2,8 +2,8 @@
 use crate::CommunicationSorts;
 use alux_ext::ext;
 use ccp_core::{EvidenceRelation, FollowingBoundary, HorizonMatch, SlotNumber};
-use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence};
+use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_more::Display;
 use derive_new::new as New;
 use std::collections::HashSet;
@@ -299,7 +299,8 @@ where
     }
 }
 
-impl<Carrier, Boundary, Relation, C> ValidatorWeight for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
+impl<Carrier, Boundary, Relation, C> ValidatorWeight
+    for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
     Carrier: ValidatorWeight,
 {
@@ -356,7 +357,8 @@ where
     }
 }
 
-impl<Carrier, Boundary, Relation, V, W, C> HorizonMatch<C, C> for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
+impl<Carrier, Boundary, Relation, V, W, C> HorizonMatch<C, C>
+    for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
     Carrier: MessageCarrier<Validator = V, Message = C> + ValidatorSet + ValidatorWeight<Weight = W>,
     Boundary: FollowingBoundary<u64>,
@@ -373,9 +375,10 @@ where
 impl<Carrier, Boundary, Relation, V, W, C> HorizonMatch<C, C>
     for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
-    Carrier:
-        MessageCarrier<Validator = V, Message = C> + MessageJustification<Message = C> + ValidatorSet<Validator = V>
-            + ValidatorWeight<Weight = W>,
+    Carrier: MessageCarrier<Validator = V, Message = C>
+        + MessageJustification<Message = C>
+        + ValidatorSet<Validator = V>
+        + ValidatorWeight<Weight = W>,
     Boundary: FollowingBoundary<u64>,
     Relation: EvidenceRelation<C, C>,
     V: Clone + Eq + Hash,

@@ -1,7 +1,7 @@
 use crate::{MessageCarrier, MessageCarrierExt, MessageJustification, MessageJustificationExt};
 use ccp_core::EvidenceRelation;
-use ccp_validator::{ValidatorSet, ValidatorSorts, ValidatorWeight};
 use ccp_quorum::WitnessSelection;
+use ccp_validator::{ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_new::new as New;
 use std::{hash::Hash, marker::PhantomData};
 

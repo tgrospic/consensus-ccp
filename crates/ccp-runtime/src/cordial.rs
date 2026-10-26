@@ -8,8 +8,8 @@ use ccp_cordial::{CordialBlocklace, CordialCollapseExt, CordialLeader, RatifiedP
 use ccp_core::CandidateSorts;
 use ccp_core::{CandidateSpace, Closed, Decision, EvidenceRelation, FollowingBoundary, HistoryCollapse, HorizonMatch};
 use ccp_leader::{LeaderSelection, LeaderSelectionPolicy};
-use ccp_validator::{CommitteeOrder, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use ccp_quorum::{CandidateSupport, QuorumOf, ValidatorEvidence};
+use ccp_validator::{CommitteeOrder, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_new::new as New;
 use std::hash::Hash;
 

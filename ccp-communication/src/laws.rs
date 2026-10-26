@@ -6,8 +6,8 @@ use alux_ext::ext;
 use anyhow::{Result, anyhow, bail, ensure};
 use ccp_core::HistoryExpansion;
 use ccp_validator::{
-    CommitteeLawsExt, CommitteeOrder, QuorumLawsExt, QuorumThreshold, QuorumThresholdExt, ValidatorSet, ValidatorWeight,
-    WeightedCommitteeExt,
+    CommitteeLawsExt, CommitteeOrder, QuorumLawsExt, QuorumThreshold, QuorumThresholdExt, ValidatorSet,
+    ValidatorWeight, WeightedCommitteeExt,
 };
 use std::{collections::HashSet, fmt::Debug, hash::Hash};
 
