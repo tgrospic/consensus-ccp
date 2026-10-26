@@ -29,14 +29,15 @@ ccp_adaptive = { package = "ccp-adaptive", path = "ccp-adaptive", version = "0.1
 ccp_dense_leader = { package = "ccp-dense-leader", path = "ccp-dense-leader", version = "0.1.0" }
 ccp_nakamoto = { package = "ccp-nakamoto", path = "ccp-nakamoto", version = "0.1.0" }
 ccp_stake = { package = "ccp-stake", path = "ccp-stake", version = "0.1.0" }
-ccp_stake_memory = { package = "ccp-stake-memory", path = "crates/ccp-stake-memory", version = "0.1.0" }
 ccp_token = { package = "ccp-token", path = "ccp-token", version = "0.1.0" }
+ccp_stake_memory = { package = "ccp-stake-memory", path = "crates/ccp-stake-memory", version = "0.1.0" }
 ccp_token_memory = { package = "ccp-token-memory", path = "crates/ccp-token-memory", version = "0.1.0" }
 ccp_scenarios = { package = "ccp-scenarios", path = "ccp-scenarios" }
 ccp_comparison = { package = "ccp-comparison", path = "ccp-comparison" }
 ccp_runtime = { package = "consensus-ccp-runtime", path = "crates/ccp-runtime", version = "0.1.0" }
 derive_more = { version = "2", features = ["display"] }
 derive-new = "0.7"
+trait-set = "0.5"
 alux-ext = "0.2"
 
 [workspace.lints.rust]

@@ -1,0 +1,25 @@
+[package]
+name = "ccp-token-stake"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Cosmos, Ethereum, and Cardano chains that stake a native token"
+readme = "README.md"
+publish = false
+
+[dependencies]
+alux-ext.workspace = true
+ccp_stake.workspace = true
+ccp_token.workspace = true
+ccp_validator.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
+trait-set.workspace = true
+
+[lints]
+workspace = true
