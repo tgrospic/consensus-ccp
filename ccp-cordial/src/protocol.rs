@@ -10,7 +10,8 @@ use ccp_core::{
     PredecessorChainExt,
 };
 use ccp_leader::{PeriodicRoundRobin, Policy};
-use ccp_quorum::{QuorumOf, TwoThirdsQuorum, ValidatorSet};
+use ccp_quorum::QuorumOf;
+use ccp_validator::{TwoThirdsQuorum, ValidatorSet, ValidatorWeight};
 use std::collections::BTreeSet;
 use std::hash::Hash;
 
@@ -59,10 +60,11 @@ pub fn cordial_policy(first: u64, wave: u64) -> CordialPolicy {
 
 /// Presents common evidence relations in Cordial Miners' vocabulary.
 #[ext(name = CordialEvidenceExt)]
-pub impl<This, V, C> This
+pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet,
+    This: MessageCarrier<Validator = V, Message = C> + MessageJustification + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
+    W: Into<u128>,
     C: Clone + Eq + Hash,
 {
     /// Reports whether `witness` ratifies `candidate` through a quorum of approvals.

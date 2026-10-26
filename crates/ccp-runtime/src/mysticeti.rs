@@ -7,7 +7,7 @@ use ccp_leader::{LeaderSelection, LeaderSelectionPolicy};
 use ccp_mysticeti::{
     CertifiedLink, MysticetiCertificateExt, MysticetiCollapseViewExt, MysticetiDagEvidence, RepairAnchorSlots,
 };
-use ccp_quorum::{CommitteeOrder, ValidatorSet};
+use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorWeight};
 use derive_new::new as New;
 use std::hash::Hash;
 
@@ -69,14 +69,16 @@ where
     }
 }
 
-impl<Carrier, V, C, Schedule> CertifiedLink for ScheduledHistory<'_, Carrier, Schedule>
+impl<Carrier, V, W, C, Schedule> CertifiedLink for ScheduledHistory<'_, Carrier, Schedule>
 where
     Carrier: CandidateSpace<Slot = MessageSlot<V>, Candidate = C>
         + MessageCarrier<Validator = V, Message = C>
         + MessageJustification
-        + ValidatorSet,
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
     Schedule: FollowingBoundary<u64>,
     V: Clone + Eq + Hash + Ord,
+    W: Into<u128>,
     C: Clone + Eq + Hash + Ord,
 {
     fn certified_link(&self, anchor: &C, candidate: &C) -> bool {

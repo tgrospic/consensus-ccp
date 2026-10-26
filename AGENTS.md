@@ -19,7 +19,8 @@ storage, validator-management, or node-runtime project without an explicit scope
 | --- | --- |
 | `ccp/` | Grouping of the specifications; re-exports specs only |
 | `ccp-core/` | Candidate and collapse sorts, expansion, restrictions, realization |
-| `ccp-quorum/`, `ccp-communication/` | Validator and message sorts, message-carrier admission, evidence compositions |
+| `ccp-validator/` | Validator committee, weight, order, and weighted quorum threshold |
+| `ccp-quorum/`, `ccp-communication/` | Attributed evidence, message sorts, message-carrier admission, evidence compositions |
 | `ccp-leader/`, `ccp-confidence/` | Scheduling and protocol-distinct confidence |
 | `ccp-mysticeti/`, `ccp-cordial/`, `ccp-adaptive/`, `ccp-dense-leader/`, `ccp-nakamoto/` | Protocol specifications and their laws |
 | `ccp-scenarios/` | Scenario-authoring language and protocol scenarios |

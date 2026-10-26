@@ -5,7 +5,7 @@ use ccp_core::CandidateSorts;
 use ccp_core::{CandidateSpace, Closed, Decision, HistoryCollapse};
 use ccp_dense_leader::{DenseLeaderEvidenceCollapseExt, SlotLeader};
 use ccp_leader::{AllLeaderSlots, LeaderSelection, LeaderSelectionPolicy};
-use ccp_quorum::CommitteeOrder;
+use ccp_validator::CommitteeOrder;
 use derive_new::new as New;
 use std::hash::Hash;
 

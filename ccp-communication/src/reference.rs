@@ -1,6 +1,6 @@
 //! Defines the reference round-advance policy.
 use crate::AdvancePolicy;
-use ccp_quorum::QuorumThreshold;
+use ccp_validator::QuorumThreshold;
 use derive_new::new as New;
 
 /// Advances a round once a strict threshold fraction of validators covers each round in a window.

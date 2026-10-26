@@ -7,8 +7,7 @@ use ccp_communication::{
 use ccp_core::CandidateSorts;
 use ccp_core::{CandidateSpace, HistoryExpansion};
 use ccp_leader::CandidateAuthor;
-use ccp_quorum::ValidatorSorts;
-use ccp_quorum::{CommitteeOrder, QuorumThreshold, ValidatorSet};
+use ccp_validator::{CommitteeOrder, QuorumThreshold, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_new::new as New;
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::fmt::Debug;
@@ -89,6 +88,7 @@ where
 
 impl<V, C> ValidatorSorts for CommunicationHistory<V, C> {
     type Validator = V;
+    type Weight = u64;
 }
 
 impl<V, C> ValidatorSet for CommunicationHistory<V, C>
@@ -97,6 +97,13 @@ where
 {
     fn validators(&self) -> Vec<V> {
         self.committee.clone()
+    }
+}
+
+impl<V, C> ValidatorWeight for CommunicationHistory<V, C> {
+    /// Assigns every committee member unit weight, so weighted quorums count validators.
+    fn weight(&self, _validator: &V) -> u64 {
+        1
     }
 }
 

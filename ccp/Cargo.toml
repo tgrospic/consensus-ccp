@@ -24,6 +24,7 @@ ccp_leader.workspace = true
 ccp_mysticeti.workspace = true
 ccp_nakamoto.workspace = true
 ccp_quorum.workspace = true
+ccp_validator.workspace = true
 
 [lints]
 workspace = true

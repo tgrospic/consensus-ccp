@@ -6,7 +6,7 @@ use ccp::protocols::adaptive::adaptive_policy;
 use ccp::protocols::cordial::cordial_policy;
 use ccp::protocols::dense_leader::dense_leader_policy;
 use ccp::protocols::mysticeti::mysticeti_policy;
-use ccp::quorum::CommitteeOrder;
+use ccp::validator::CommitteeOrder;
 use ccp::{Closed, HistoryCollapse};
 use ccp_runtime::{
     CandidateId, CommunicationExpansion, CommunicationHistory, CordialCollapse, Machine, MysticetiCollapse,

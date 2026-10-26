@@ -2,12 +2,13 @@ use crate::{DenseLeaderEvidenceCollapseExt, SlotLeader};
 use alux_ext::ext;
 use anyhow::{Result, ensure};
 use ccp_core::CandidateSpace;
-use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence, ValidatorSet};
+use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence};
+use ccp_validator::{ValidatorSet, ValidatorWeight};
 use std::{fmt::Debug, hash::Hash};
 
 /// Checks legitimacy-driven leader-finalization obligations.
 #[ext(name = DenseLeaderLawsExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: CandidateSpace<Slot = S, Candidate = C> + SlotLeader,
 {
@@ -15,7 +16,9 @@ where
     /// legitimate slot leaders there, each leading its own slot, in strictly increasing slot order.
     fn check_dense_leader_finalizations<Evidence>(&self, evidence: &Evidence, frontier: &S) -> Result<()>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
         S: Clone + Ord + Debug,
         C: Clone + Eq + Hash + Debug,
     {

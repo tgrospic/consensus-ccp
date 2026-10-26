@@ -2,19 +2,24 @@ use crate::{MysticetiEvidenceViewExt, MysticetiSkip, RepairAnchorSlots};
 use alux_ext::ext;
 use anyhow::{Result, ensure};
 use ccp_core::{CandidateSpace, HorizonMatch};
-use ccp_quorum::{ValidatorEvidence, ValidatorSet};
-use std::fmt::Debug;
+use ccp_quorum::ValidatorEvidence;
+use ccp_validator::{ValidatorSet, ValidatorWeight};
+use std::{fmt::Debug, hash::Hash};
 
 /// Checks Mysticeti direct-evidence obligations.
 #[ext(name = MysticetiLawsExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: CandidateSpace<Slot = S, Candidate = C>,
 {
     /// Checks that no proposer slot carries incompatible direct commit and skip evidence.
     fn check_mysticeti_direct_exclusivity<Evidence>(&self, evidence: &Evidence) -> Result<()>
     where
-        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S> + ValidatorSet<Validator = V>,
+        Evidence: HorizonMatch<C, C> + ValidatorEvidence<MysticetiSkip, S>
+            + ValidatorSet<Validator = V>
+            + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
         S: Debug,
         C: Clone + Debug,
     {

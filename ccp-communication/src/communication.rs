@@ -2,8 +2,8 @@
 use crate::CommunicationSorts;
 use alux_ext::ext;
 use ccp_core::{EvidenceRelation, FollowingBoundary, HorizonMatch, SlotNumber};
-use ccp_quorum::ValidatorSorts;
-use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, CommitteeOrder, ValidatorEvidence, ValidatorSet};
+use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorSorts, ValidatorWeight};
+use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence};
 use derive_more::Display;
 use derive_new::new as New;
 use std::collections::HashSet;
@@ -157,6 +157,7 @@ where
     Carrier: ValidatorSorts,
 {
     type Validator = Carrier::Validator;
+    type Weight = Carrier::Weight;
 }
 
 impl<Carrier, Relation> ValidatorSet for RelationEvidence<'_, Carrier, Relation>
@@ -165,6 +166,15 @@ where
 {
     fn validators(&self) -> Vec<Self::Validator> {
         self.carrier.validators()
+    }
+}
+
+impl<Carrier, Relation> ValidatorWeight for RelationEvidence<'_, Carrier, Relation>
+where
+    Carrier: ValidatorWeight,
+{
+    fn weight(&self, validator: &Self::Validator) -> Self::Weight {
+        self.carrier.weight(validator)
     }
 }
 
@@ -199,6 +209,7 @@ where
     Carrier: ValidatorSorts,
 {
     type Validator = Carrier::Validator;
+    type Weight = Carrier::Weight;
 }
 
 impl<Carrier, Relation, C> ValidatorSet for ObservedRelationEvidence<'_, Carrier, Relation, C>
@@ -207,6 +218,15 @@ where
 {
     fn validators(&self) -> Vec<Self::Validator> {
         self.carrier.validators()
+    }
+}
+
+impl<Carrier, Relation, C> ValidatorWeight for ObservedRelationEvidence<'_, Carrier, Relation, C>
+where
+    Carrier: ValidatorWeight,
+{
+    fn weight(&self, validator: &Self::Validator) -> Self::Weight {
+        self.carrier.weight(validator)
     }
 }
 
@@ -241,6 +261,7 @@ where
     Carrier: ValidatorSorts,
 {
     type Validator = Carrier::Validator;
+    type Weight = Carrier::Weight;
 }
 
 impl<Carrier, Boundary, Relation, C> ValidatorSet for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
@@ -252,11 +273,21 @@ where
     }
 }
 
+impl<Carrier, Boundary, Relation, C> ValidatorWeight for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
+where
+    Carrier: ValidatorWeight,
+{
+    fn weight(&self, validator: &Self::Validator) -> Self::Weight {
+        self.carrier.weight(validator)
+    }
+}
+
 impl<Carrier, Boundary, Relation, C> ValidatorSorts for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
     Carrier: ValidatorSorts,
 {
     type Validator = Carrier::Validator;
+    type Weight = Carrier::Weight;
 }
 
 impl<Carrier, Boundary, Relation, C> ValidatorSet for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
@@ -265,6 +296,15 @@ where
 {
     fn validators(&self) -> Vec<Self::Validator> {
         self.carrier.validators()
+    }
+}
+
+impl<Carrier, Boundary, Relation, C> ValidatorWeight for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
+where
+    Carrier: ValidatorWeight,
+{
+    fn weight(&self, validator: &Self::Validator) -> Self::Weight {
+        self.carrier.weight(validator)
     }
 }
 
@@ -316,12 +356,13 @@ where
     }
 }
 
-impl<Carrier, Boundary, Relation, V, C> HorizonMatch<C, C> for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
+impl<Carrier, Boundary, Relation, V, W, C> HorizonMatch<C, C> for HorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
-    Carrier: MessageCarrier<Validator = V, Message = C> + ValidatorSet,
+    Carrier: MessageCarrier<Validator = V, Message = C> + ValidatorSet + ValidatorWeight<Weight = W>,
     Boundary: FollowingBoundary<u64>,
     Relation: EvidenceRelation<C, C>,
-    V: Clone + Eq,
+    V: Clone + Eq + Hash,
+    W: Into<u128>,
     C: Clone + Eq,
 {
     fn match_horizon(&self, query: &C) -> Option<C> {
@@ -329,14 +370,16 @@ where
     }
 }
 
-impl<Carrier, Boundary, Relation, V, C> HorizonMatch<C, C>
+impl<Carrier, Boundary, Relation, V, W, C> HorizonMatch<C, C>
     for ObservedHorizonMatchEvidence<'_, Carrier, Boundary, Relation, C>
 where
     Carrier:
-        MessageCarrier<Validator = V, Message = C> + MessageJustification<Message = C> + ValidatorSet<Validator = V>,
+        MessageCarrier<Validator = V, Message = C> + MessageJustification<Message = C> + ValidatorSet<Validator = V>
+            + ValidatorWeight<Weight = W>,
     Boundary: FollowingBoundary<u64>,
     Relation: EvidenceRelation<C, C>,
-    V: Clone + Eq,
+    V: Clone + Eq + Hash,
+    W: Into<u128>,
     C: Clone + Eq + Hash,
 {
     fn match_horizon(&self, query: &C) -> Option<C> {

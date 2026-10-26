@@ -39,7 +39,7 @@ input, an expansion interpretation, and laws. Storing a conclusion in a map does
 
 | Layer | Specification crates |
 | --- | --- |
-| Shared vocabulary and operations | `ccp-core`, `ccp-quorum`, `ccp-communication`, `ccp-leader`, `ccp-confidence` |
+| Shared vocabulary and operations | `ccp-core`, `ccp-validator`, `ccp-quorum`, `ccp-communication`, `ccp-leader`, `ccp-confidence` |
 | Protocol compositions | `ccp-mysticeti`, `ccp-cordial`, `ccp-adaptive`, `ccp-dense-leader`, `ccp-nakamoto` |
 | Scenario language and comparisons | `ccp-scenarios`, `ccp-comparison` |
 | Specification grouping | `ccp` |
@@ -52,9 +52,9 @@ only re-exports of specifications: the core vocabulary at its root, one path per
 Interpreters depend directly on the specs they realize.
 
 ```text
-ccp-core          ccp-confidence
-    ^                    ^
-ccp-quorum               |
+ccp-core  ccp-validator  ccp-confidence
+    ^          ^             ^
+    ccp-quorum               |
     ^                    |
 ccp-communication        |
 ccp-leader               |
@@ -68,7 +68,8 @@ ccp-comparison
 ccp facade / concrete interpreters / examples
 ```
 
-`ccp-core` has no dependency on any other spec. `ccp-quorum` depends only on core;
+`ccp-core` and `ccp-validator` have no dependency on any other spec. `ccp-quorum` depends only on core
+and validator;
 `ccp-nakamoto` depends only on core and confidence. Protocol specs have no sibling-protocol
 or runtime dependencies, and no dependency on scenario or test material. Scenarios sit above them
 in `ccp-scenarios`, and cross-protocol scenarios in `ccp-comparison`.
@@ -77,8 +78,8 @@ in `ccp-scenarios`, and cross-protocol scenarios in `ccp-comparison`.
 
 Sort traits declare names only. `CandidateSorts` supplies `Slot` and `Candidate`;
 `CollapseSorts` supplies `History`, `Evidence`, `Visible`, and `Output`. The operations inherit
-these vocabularies instead of declaring the names again. Membership, committee order, and witness
-selection inherit `ValidatorSorts`; lookup and justification inherit `CommunicationSorts`.
+these vocabularies instead of declaring the names again. Membership, committee order, voting weight,
+and witness selection inherit `ValidatorSorts`, which names `Validator` and `Weight`; lookup and justification inherit `CommunicationSorts`.
 
 Inheritance shares vocabulary. Derived operations still list exactly the operational capabilities
 they consume. A `CollapsePolicy` product connects independently selected stages by their shared
@@ -199,7 +200,8 @@ certificate authors over reachable histories. This checks that composition's rep
 independence; it is not a proof of the entire protocol.
 
 `QuorumOf<Selection, Relation, Threshold>` composes attributed witness selection, support, and quorum
-arithmetic. `WitnessQuorumExt` counts distinct eligible authors. `PreviousRoundWitnesses` selects
+arithmetic. `WitnessQuorumExt` weighs distinct eligible authors against the total committee weight
+from `ccp-validator`; counting is the unit-weight case. `PreviousRoundWitnesses` selects
 immediately preceding direct justifications; the Byzantine protocol compositions explicitly pair it
 with `TwoThirdsQuorum`. Neither temporal adjacency nor the threshold is built into generic quorum
 formation. Selecting a different threshold defines a different policy whose safety obligations must

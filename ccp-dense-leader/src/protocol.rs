@@ -4,9 +4,8 @@ use ccp_communication::{JustificationRelation, PreviousRoundWitnesses};
 use ccp_core::CandidateSorts;
 use ccp_core::{AllCandidates, CandidateSpace, Decision, Unbounded};
 use ccp_leader::{AllLeaderSlots, Policy};
-use ccp_quorum::{
-    CandidateLegitimacyExt, CandidateSupport, QuorumOf, TwoThirdsQuorum, ValidatorEvidence, ValidatorSet,
-};
+use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, QuorumOf, ValidatorEvidence};
+use ccp_validator::{TwoThirdsQuorum, ValidatorSet, ValidatorWeight};
 use std::hash::Hash;
 
 /// Names a quorum of justification as dense legitimacy.
@@ -29,7 +28,7 @@ pub trait SlotLeader: CandidateSorts {
 
 /// Derives leader finalization from a separately interpreted legitimacy view.
 #[ext(name = DenseLeaderEvidenceCollapseExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: CandidateSpace<Slot = S, Candidate = C> + SlotLeader,
     S: Clone + Ord,
@@ -38,7 +37,9 @@ where
     /// Returns every leader accepted by `evidence`, optionally above an existing frontier.
     fn dense_leader_finalizations_from<Evidence>(&self, evidence: &Evidence, frontier: Option<&S>) -> Vec<C>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
     {
         self.slots()
             .into_iter()
@@ -51,7 +52,9 @@ where
     /// Returns every leader accepted by `evidence` above `frontier`, oldest first.
     fn dense_leader_finalizations<Evidence>(&self, evidence: &Evidence, frontier: &S) -> Vec<C>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
     {
         self.dense_leader_finalizations_from(evidence, Some(frontier))
     }
@@ -59,7 +62,9 @@ where
     /// Classifies a slot from all leaders accepted in the current history.
     fn dense_leader_history_decision<Evidence>(&self, evidence: &Evidence, slot: &S) -> Decision<S, C>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
     {
         self.dense_leader_decision_from(evidence, slot, None)
     }
@@ -67,7 +72,9 @@ where
     /// Classifies a slot from the leaders accepted by `evidence`.
     fn dense_leader_decision<Evidence>(&self, evidence: &Evidence, slot: &S, frontier: &S) -> Decision<S, C>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
     {
         self.dense_leader_decision_from(evidence, slot, Some(frontier))
     }
@@ -80,7 +87,9 @@ where
         frontier: Option<&S>,
     ) -> Decision<S, C>
     where
-        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V>,
+        Evidence: ValidatorEvidence<CandidateSupport, C> + ValidatorSet<Validator = V> + ValidatorWeight<Weight = W>,
+        V: Eq + Hash,
+        W: Into<u128>,
     {
         let leaders = self.dense_leader_finalizations_from(evidence, frontier);
         leaders.iter().find(|candidate| &self.slot_of(candidate) == slot).cloned().map_or_else(

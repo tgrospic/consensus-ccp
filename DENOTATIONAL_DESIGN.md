@@ -180,7 +180,7 @@ JustificationRelation
 
 `EvidenceRelation<W, T>` states that witness `W` supports target `T`. `UncontestedRelation` removes
 support from a witness that also observes a conflicting target. `QuorumOf<Selection, Relation, Threshold>` forms a
-quorum from distinct eligible authors selected by `Selection` whose evidence satisfies `Relation`.
+quorum from the committee weight of distinct eligible authors selected by `Selection` whose evidence satisfies `Relation`.
 The threshold is a separate choice. The existing Byzantine compositions explicitly select
 `PreviousRoundWitnesses` and `TwoThirdsQuorum`. Protocol modules use type aliases and small
 extensions to name compositions in their own vocabulary; they do not reimplement the algebra.

@@ -14,6 +14,7 @@ readme = "README.md"
 anyhow.workspace = true
 ccp_core.workspace = true
 ccp_quorum.workspace = true
+ccp_validator.workspace = true
 derive-new.workspace = true
 alux-ext.workspace = true
 

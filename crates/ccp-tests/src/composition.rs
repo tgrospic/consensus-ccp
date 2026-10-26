@@ -12,8 +12,8 @@ use ccp_core::{
     VisibleDenotation,
 };
 use ccp_mysticeti::{MysticetiCertificateExt, MysticetiDagEvidence, mysticeti_policy};
-use ccp_quorum::ValidatorSorts;
-use ccp_quorum::{QuorumOf, QuorumThreshold, QuorumThresholdExt, TwoThirdsQuorum, ValidatorSet, WitnessSelection};
+use ccp_validator::{QuorumThreshold, QuorumThresholdExt, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
+use ccp_quorum::{QuorumOf, WitnessSelection};
 use ccp_runtime::{CandidateId, Machine, ValidatorId};
 use std::collections::BTreeSet;
 use std::marker::PhantomData;
@@ -35,11 +35,18 @@ struct DirectJustifications<'a>(&'a History);
 
 impl ValidatorSorts for DirectJustifications<'_> {
     type Validator = ValidatorId;
+    type Weight = u64;
 }
 
 impl ValidatorSet for DirectJustifications<'_> {
     fn validators(&self) -> Vec<ValidatorId> {
         self.0.validators()
+    }
+}
+
+impl ValidatorWeight for DirectJustifications<'_> {
+    fn weight(&self, validator: &ValidatorId) -> u64 {
+        self.0.weight(validator)
     }
 }
 
@@ -146,7 +153,7 @@ impl<Sorts: CollapseSorts> CollapseSorts for CommitQuorum<Sorts> {
 impl CollapseRule for CommitQuorum<Certificates> {
     fn collapse(&self, visible: &Vec<ValidatorId>) -> Option<CandidateId> {
         let support = visible.iter().filter(|v| self.committee.contains(v)).collect::<BTreeSet<_>>();
-        TwoThirdsQuorum.meets_quorum(support.len(), self.committee.len()).then_some(self.candidate)
+        TwoThirdsQuorum.meets_quorum(support.len() as u128, self.committee.len() as u128).then_some(self.candidate)
     }
 }
 
@@ -181,7 +188,7 @@ impl HorizonProjection for AtRound<CertificateSets> {
 impl CollapseRule for CommitQuorum<CertificateSets> {
     fn collapse(&self, visible: &BTreeSet<u64>) -> Option<u64> {
         let support = self.committee.iter().filter(|validator| visible.contains(&validator.0)).count();
-        TwoThirdsQuorum.meets_quorum(support, self.committee.len()).then_some(self.candidate.0)
+        TwoThirdsQuorum.meets_quorum(support as u128, self.committee.len() as u128).then_some(self.candidate.0)
     }
 }
 

@@ -16,6 +16,7 @@ ccp_communication.workspace = true
 ccp_core.workspace = true
 ccp_leader.workspace = true
 ccp_quorum.workspace = true
+ccp_validator.workspace = true
 derive-new.workspace = true
 alux-ext.workspace = true
 

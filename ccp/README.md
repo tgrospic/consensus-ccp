@@ -3,12 +3,12 @@
 **Consensus as expansion and collapse over an explicit semantic carrier.**
 
 The `consensus-ccp` package groups the independent `ccp-*` specifications under one path. The core
-vocabulary sits at the root; `ccp::quorum`, `ccp::communication`, `ccp::leader`, and `ccp::confidence`
+vocabulary sits at the root; `ccp::validator`, `ccp::quorum`, `ccp::communication`, `ccp::leader`, and `ccp::confidence`
 name the shared specifications, and `ccp::protocols` names each protocol specification. Its Rust
 library name is `ccp`.
 
 Applications may use the facade; interpreters and other specs depend directly on the capabilities
-they consume. `ccp-core` names candidate and collapse sorts. `ccp-quorum`, `ccp-communication`,
+they consume. `ccp-core` names candidate and collapse sorts. `ccp-validator`, `ccp-quorum`, `ccp-communication`,
 `ccp-leader`, and `ccp-confidence` supply shared meanings. Protocol crates compose these meanings;
 laws are exported by the specification that owns them.
 

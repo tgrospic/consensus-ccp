@@ -243,7 +243,8 @@ assert_eq!(machine.history().messages(), vec![CandidateId(10)]);
 .
 |- ccp/                    grouping of the specifications (re-exports only)
 |- ccp-core/               candidate/collapse sorts, expansion, restrictions, realization
-|- ccp-quorum/             validator sorts and quorum composition
+|- ccp-validator/          validator committee, weight, and quorum threshold
+|- ccp-quorum/             attributed evidence and weighted quorum composition
 |- ccp-communication/      message carrier, admission, and communication evidence
 |- ccp-leader/             leader scheduling and policy products
 |- ccp-confidence/         confidence and acceptance
@@ -280,6 +281,12 @@ The specifications are an initial design. Dense leader, Mysticeti, Cordial, and 
 ### Packaging
 
 - [ ] **Published crates:** publish only `consensus-ccp` and `consensus-ccp-runtime`. `ccp` re-exports separate spec crates, and crates.io requires every dependency of a published crate to be published, so the specs must either become modules of `ccp` or be published too.
+
+### Validator integration
+
+- [ ] **Stake-weighted runs:** give the runtime carrier a weighted genesis committee so scenarios exercise non-unit weights; reference interpretations currently assign unit weight.
+- [ ] **Epochs:** model one committee per epoch and the handover between epochs.
+- [ ] **Evidence feedback:** derive validator performance from CCP evidence and offenses from equivocation evidence, for validator-management systems such as `alux-stake` that implement `ccp-validator`. Decide where that bridge lives.
 
 ### Deeper protocol coverage
 

@@ -1,6 +1,6 @@
 //! Defines leader selection by round and authenticated candidate authorship.
 use ccp_core::CandidateSorts;
-use ccp_quorum::ValidatorSorts;
+use ccp_validator::ValidatorSorts;
 
 /// Describes whether and which validators are selected as leaders for one round.
 #[derive(Debug, Clone, PartialEq, Eq)]

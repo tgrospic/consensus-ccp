@@ -2,7 +2,7 @@ use crate::{CandidateAuthor, LeaderSelection, LeaderSelectionPolicy};
 use alux_ext::ext;
 use anyhow::{Result, anyhow, ensure};
 use ccp_core::CandidateSpace;
-use ccp_quorum::ValidatorSet;
+use ccp_validator::ValidatorSet;
 use std::{collections::HashSet, fmt::Debug, hash::Hash};
 
 /// Checks periodic leader selection against ordered committee membership.

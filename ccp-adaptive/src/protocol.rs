@@ -7,10 +7,8 @@ use ccp_core::{
     PredecessorChainExt,
 };
 use ccp_leader::{CandidateAuthor, LeaderSelection, LeaderSelectionPolicy, PeriodicRoundRobin, Policy};
-use ccp_quorum::{
-    CandidateLegitimacyExt, CandidateSupport, CommitteeOrder, QuorumOf, TwoThirdsQuorum, ValidatorEvidence,
-    ValidatorSet,
-};
+use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, QuorumOf, ValidatorEvidence};
+use ccp_validator::{CommitteeOrder, TwoThirdsQuorum, ValidatorSet, ValidatorWeight};
 use std::collections::HashSet;
 use std::hash::Hash;
 
@@ -43,14 +41,17 @@ pub fn adaptive_policy(upper_bound: u64) -> AdaptivePolicy {
 
 /// Derives the candidate-dependent direct horizon and direct commit predicate.
 #[ext(name = AdaptiveDirectExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: AdaptiveEvidence<S, C>
         + CandidateSpace<Slot = S, Candidate = C>
         + ValidatorEvidence<CandidateSupport, C>
-        + ValidatorSet<Validator = V>,
+        + ValidatorSet<Validator = V>
+        + ValidatorWeight<Weight = W>,
     S: Clone + Ord,
     C: Clone,
+    V: Eq + Hash,
+    W: Into<u128>,
 {
     /// Derives the candidate-specific horizon boundary.
     fn adaptive_horizon<Schedule>(&self, candidate: &C, schedule: &Schedule) -> S
@@ -73,17 +74,20 @@ where
 
 /// Derives direct-anchor selection from authenticated authors and the leader policy.
 #[ext(name = AdaptiveLeaderExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: CandidateSpace<Slot = S, Candidate = C>
         + AdaptiveEvidence<S, C>
         + CandidateAuthor<Validator = V>
         + CommitteeOrder
         + ValidatorEvidence<CandidateSupport, C>
-        + ValidatorSet,
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
     S: Clone + Ord,
     C: Clone,
     V: Clone + Eq,
+    V: Eq + Hash,
+    W: Into<u128>,
 {
     /// Selects the newest directly committable round-robin leader above `frontier`.
     fn adaptive_direct_anchor<Schedule>(&self, frontier: &S, schedule: &Schedule) -> Option<C>
@@ -121,7 +125,7 @@ where
 
 /// Derives the complete adaptive anchor collapse from direct and indirect rules.
 #[ext(name = AdaptiveCollapseExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: CandidateSpace<Slot = S, Candidate = C>
         + AdaptiveEvidence<S, C>
@@ -129,10 +133,13 @@ where
         + CertifiedPredecessor
         + CommitteeOrder
         + ValidatorEvidence<CandidateSupport, C>
-        + ValidatorSet,
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
     S: Clone + Ord,
     C: Clone + Eq + Hash,
     V: Clone + Eq,
+    V: Eq + Hash,
+    W: Into<u128>,
 {
     /// Returns all newly finalized anchors above `frontier`, oldest first.
     fn adaptive_finalizations<Schedule>(&self, frontier: &S, schedule: &Schedule) -> Vec<C>

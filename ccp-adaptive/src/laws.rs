@@ -3,7 +3,8 @@ use alux_ext::ext;
 use anyhow::{Result, ensure};
 use ccp_core::{CandidateRestriction, CandidateSpace, FollowingBoundary, PredecessorChainLawsExt};
 use ccp_leader::{CandidateAuthor, LeaderSelectionPolicy};
-use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, CommitteeOrder, ValidatorEvidence, ValidatorSet};
+use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence};
+use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorWeight};
 use std::{fmt::Debug, hash::Hash};
 
 /// Checks adaptive anchor-chain obligations.
@@ -56,14 +57,17 @@ where
 
 /// Checks adaptive direct-anchor legitimacy independently from predecessor-chain laws.
 #[ext(name = AdaptiveDirectLawsExt)]
-pub impl<This, S, C, V> This
+pub impl<This, S, C, V, W> This
 where
     This: AdaptiveEvidence<S, C>
         + CandidateAuthor<Validator = V, Candidate = C>
         + CandidateSpace<Slot = S>
         + CommitteeOrder
         + ValidatorEvidence<CandidateSupport, C>
-        + ValidatorSet,
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
+    V: Eq + Hash,
+    W: Into<u128>,
 {
     /// Checks that a selected direct anchor satisfies the shared strict-supermajority legitimacy predicate.
     fn check_adaptive_direct_legitimacy<Schedule>(&self, frontier: &S, schedule: &Schedule) -> Result<()>

@@ -1,7 +1,7 @@
 use crate::{MessageCarrier, MessageCarrierExt, MessageJustification, MessageJustificationExt};
 use ccp_core::EvidenceRelation;
-use ccp_quorum::ValidatorSorts;
-use ccp_quorum::{ValidatorSet, WitnessSelection};
+use ccp_validator::{ValidatorSet, ValidatorSorts, ValidatorWeight};
+use ccp_quorum::WitnessSelection;
 use derive_new::new as New;
 use std::{hash::Hash, marker::PhantomData};
 
@@ -85,6 +85,7 @@ where
     Carrier: ValidatorSorts,
 {
     type Validator = Carrier::Validator;
+    type Weight = Carrier::Weight;
 }
 
 impl<Carrier> ValidatorSet for PreviousRoundWitnesses<'_, Carrier>
@@ -93,5 +94,14 @@ where
 {
     fn validators(&self) -> Vec<Self::Validator> {
         self.carrier.validators()
+    }
+}
+
+impl<Carrier> ValidatorWeight for PreviousRoundWitnesses<'_, Carrier>
+where
+    Carrier: ValidatorWeight,
+{
+    fn weight(&self, validator: &Self::Validator) -> Self::Weight {
+        self.carrier.weight(validator)
     }
 }

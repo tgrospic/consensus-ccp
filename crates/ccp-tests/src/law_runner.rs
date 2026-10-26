@@ -18,6 +18,7 @@ use ccp_runtime::{
     CandidateId, CordialCollapse, CordialDagView, DenseLeaderCollapse, MysticetiCollapse, ObservedSlot,
     ScheduledHistory, ScheduledLeaderCollapse, ScheduledLeaderView, ValidatorId,
 };
+use ccp_validator::{CommitteeLawsExt, TwoThirdsQuorum, ValidatorSet, WeightedSupportLawsExt};
 
 /// Selects the protocol whose laws a scenario's collapse expectation brings into scope.
 #[derive(Debug, Clone)]
@@ -93,10 +94,24 @@ impl ProtocolLaws {
     }
 }
 
-/// Checks the candidate-space and authorship laws every communication history satisfies.
+/// Checks the candidate-space, authorship, and committee laws every communication history satisfies.
 pub(crate) fn check_carrier_laws(history: &History) -> Result<()> {
     history.check_candidate_space()?;
-    history.check_candidate_authors()
+    history.check_candidate_authors()?;
+    history.check_committee_order()?;
+    let subsets = committee_subsets(&history.validators());
+    subsets.iter().try_for_each(|supporters| {
+        subsets.iter().try_for_each(|others| history.check_weighted_support(&TwoThirdsQuorum, supporters, others))
+    })
+}
+
+/// Lists every subset of `committee`, so weighted-support laws see each pair of supporter sets.
+fn committee_subsets(committee: &[ValidatorId]) -> Vec<Vec<ValidatorId>> {
+    (0..1_u32 << committee.len())
+        .map(|mask| {
+            committee.iter().enumerate().filter(|(index, _)| mask & (1 << index) != 0).map(|(_, v)| *v).collect()
+        })
+        .collect()
 }
 
 /// Pairs the scenario's constructive expansion with one protocol collapse.

@@ -13,6 +13,7 @@ readme = "README.md"
 [dependencies]
 anyhow.workspace = true
 ccp_core.workspace = true
+ccp_validator.workspace = true
 derive-new.workspace = true
 alux-ext.workspace = true
 

@@ -1,7 +1,7 @@
 //! Defines the typed message input and the admission rule of communication expansion.
 use crate::{AdvancePolicy, AdvancePolicyExt, MessageCarrier, MessageCarrierExt, MessageSlot};
 use alux_ext::ext;
-use ccp_quorum::{QuorumThreshold, ValidatorSet};
+use ccp_validator::{QuorumThreshold, QuorumThresholdExt, ValidatorSet, ValidatorWeight, WeightedCommitteeExt};
 use derive_new::new as New;
 use std::collections::HashSet;
 use std::hash::Hash;
@@ -34,16 +34,17 @@ pub enum ExpansionError {
     NonCausalJustification,
     /// Rejects a message without the advance policy's required justification quorum.
     InsufficientAdvanceEvidence,
-    /// Rejects a round whose equivocators exceed the policy's Byzantine bound.
+    /// Rejects a round whose equivocator weight exceeds the policy's Byzantine bound.
     EquivocationBoundExceeded,
 }
 
 /// Derives which message inputs lawfully expand a communication history.
 #[ext(name = MessageAdmissionExt)]
-pub impl<This, V, C> This
+pub impl<This, V, W, C> This
 where
-    This: MessageCarrier<Validator = V, Message = C> + ValidatorSet,
+    This: MessageCarrier<Validator = V, Message = C> + ValidatorSet + ValidatorWeight<Weight = W>,
     V: Clone + Eq + Hash,
+    W: Into<u128>,
     C: Clone + Eq,
 {
     /// Admits `input` as a successor message under `advance`, or returns the first rule it violates.
@@ -88,7 +89,7 @@ where
         if self.message_at(&input.slot).is_some() {
             equivocators.insert(input.slot.validator.clone());
         }
-        if equivocators.len() > advance.fault_bound(validators.len()) {
+        if self.support_weight(equivocators) > advance.fault_bound(self.total_weight()) {
             return Err(ExpansionError::EquivocationBoundExceeded);
         }
         Ok(())

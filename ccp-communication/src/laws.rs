@@ -5,14 +5,22 @@ use crate::{
 use alux_ext::ext;
 use anyhow::{Result, anyhow, bail, ensure};
 use ccp_core::HistoryExpansion;
-use ccp_quorum::{CommitteeLawsExt, CommitteeOrder, QuorumLawsExt, QuorumThreshold, ValidatorSet};
+use ccp_validator::{
+    CommitteeLawsExt, CommitteeOrder, QuorumLawsExt, QuorumThreshold, QuorumThresholdExt, ValidatorSet, ValidatorWeight,
+    WeightedCommitteeExt,
+};
 use std::{collections::HashSet, fmt::Debug, hash::Hash};
 
 /// Checks that a message history is lawful under a round-advance policy.
 #[ext(name = MessageHistoryLawsExt)]
-pub impl<This, V, C> This
+pub impl<This, V, W, C> This
 where
-    This: CommitteeOrder<Validator = V> + MessageCarrier<Message = C> + MessageJustification + ValidatorSet,
+    This: CommitteeOrder<Validator = V>
+        + MessageCarrier<Message = C>
+        + MessageJustification
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
+    W: Into<u128>,
 {
     /// Checks identity, reference, causal-order, equivocation, and round-advance obligations.
     fn check_lawful_message_history<Policy>(&self, advance: &Policy) -> Result<()>
@@ -22,7 +30,7 @@ where
         C: Clone + Eq + Hash + Debug,
     {
         self.check_committee_order()?;
-        advance.check_quorum_threshold(self.validators().len())?;
+        advance.check_quorum_threshold(self.total_weight())?;
         ensure!(advance.window() != 0, "advance window is zero");
 
         let messages = self.messages();
@@ -50,7 +58,7 @@ where
             "an occupied round lacks quorum in its required advance window"
         );
 
-        let fault_bound = advance.fault_bound(self.validators().len());
+        let fault_bound = advance.fault_bound(self.total_weight());
         rounds.into_iter().try_for_each(|round| {
             let equivocators = self
                 .message_slots()
@@ -59,7 +67,7 @@ where
                 .map(|MessageSlot { validator, .. }| validator)
                 .collect::<HashSet<_>>();
             ensure!(
-                equivocators.len() <= fault_bound,
+                self.support_weight(equivocators.iter().cloned()) <= fault_bound,
                 "round {round} exceeds the equivocation bound: {equivocators:?}"
             );
             Ok(())
@@ -69,10 +77,15 @@ where
 
 /// Checks communication expansion against the admission rule of the message carrier.
 #[ext(name = MessageExpansionLawsExt)]
-pub impl<This, H, V, C> This
+pub impl<This, H, V, W, C> This
 where
     This: HistoryExpansion<H, Input = MessageInput<V, C>, Error = ExpansionError>,
-    H: CommitteeOrder<Validator = V> + MessageCarrier<Message = C> + MessageJustification + ValidatorSet,
+    H: CommitteeOrder<Validator = V>
+        + MessageCarrier<Message = C>
+        + MessageJustification
+        + ValidatorSet
+        + ValidatorWeight<Weight = W>,
+    W: Into<u128>,
 {
     /// Checks that expansion accepts exactly the admitted input, preserves earlier messages and
     /// justifications, places the input at its slot, and yields a lawful message DAG.

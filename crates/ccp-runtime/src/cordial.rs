@@ -8,8 +8,8 @@ use ccp_cordial::{CordialBlocklace, CordialCollapseExt, CordialLeader, RatifiedP
 use ccp_core::CandidateSorts;
 use ccp_core::{CandidateSpace, Closed, Decision, EvidenceRelation, FollowingBoundary, HistoryCollapse, HorizonMatch};
 use ccp_leader::{LeaderSelection, LeaderSelectionPolicy};
-use ccp_quorum::ValidatorSorts;
-use ccp_quorum::{CandidateSupport, CommitteeOrder, QuorumOf, TwoThirdsQuorum, ValidatorEvidence, ValidatorSet};
+use ccp_validator::{CommitteeOrder, TwoThirdsQuorum, ValidatorSet, ValidatorSorts, ValidatorWeight};
+use ccp_quorum::{CandidateSupport, QuorumOf, ValidatorEvidence};
 use derive_new::new as New;
 use std::hash::Hash;
 
@@ -50,6 +50,7 @@ where
 
 impl<V, C, Schedule> ValidatorSorts for CordialDagView<'_, V, C, Schedule> {
     type Validator = V;
+    type Weight = u64;
 }
 
 impl<V, C, Schedule> ValidatorSet for CordialDagView<'_, V, C, Schedule>
@@ -58,6 +59,12 @@ where
 {
     fn validators(&self) -> Vec<V> {
         self.history.validators()
+    }
+}
+
+impl<V, C, Schedule> ValidatorWeight for CordialDagView<'_, V, C, Schedule> {
+    fn weight(&self, validator: &V) -> u64 {
+        self.history.weight(validator)
     }
 }
 
