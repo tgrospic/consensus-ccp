@@ -19,6 +19,7 @@ anyhow = "1"
 ccp = { package = "consensus-ccp", path = "ccp", version = "0.1.0" }
 ccp_core = { package = "ccp-core", path = "ccp-core", version = "0.1.0" }
 ccp_quorum = { package = "ccp-quorum", path = "ccp-quorum", version = "0.1.0" }
+ccp_validator = { package = "ccp-validator", path = "ccp-validator", version = "0.1.0" }
 ccp_communication = { package = "ccp-communication", path = "ccp-communication", version = "0.1.0" }
 ccp_leader = { package = "ccp-leader", path = "ccp-leader", version = "0.1.0" }
 ccp_confidence = { package = "ccp-confidence", path = "ccp-confidence", version = "0.1.0" }
