@@ -28,6 +28,8 @@ ccp_cordial = { package = "ccp-cordial", path = "ccp-cordial", version = "0.1.0"
 ccp_adaptive = { package = "ccp-adaptive", path = "ccp-adaptive", version = "0.1.0" }
 ccp_dense_leader = { package = "ccp-dense-leader", path = "ccp-dense-leader", version = "0.1.0" }
 ccp_nakamoto = { package = "ccp-nakamoto", path = "ccp-nakamoto", version = "0.1.0" }
+ccp_stake = { package = "ccp-stake", path = "ccp-stake", version = "0.1.0" }
+ccp_stake_memory = { package = "ccp-stake-memory", path = "crates/ccp-stake-memory", version = "0.1.0" }
 ccp_token = { package = "ccp-token", path = "ccp-token", version = "0.1.0" }
 ccp_token_memory = { package = "ccp-token-memory", path = "crates/ccp-token-memory", version = "0.1.0" }
 ccp_scenarios = { package = "ccp-scenarios", path = "ccp-scenarios" }

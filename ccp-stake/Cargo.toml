@@ -1,0 +1,19 @@
+[package]
+name = "ccp-stake"
+version.workspace = true
+description = "The meaning of proof of stake: epoch weights, rewards, and penalties, with escrow and delegation as weight sources"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+alux-ext.workspace = true
+anyhow.workspace = true
+ccp_validator.workspace = true
