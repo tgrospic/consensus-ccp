@@ -1,0 +1,20 @@
+[package]
+name = "ccp-token-memory"
+version.workspace = true
+description = "Reference in-memory interpretation of the ccp-token specification"
+authors.workspace = true
+edition.workspace = true
+homepage.workspace = true
+repository.workspace = true
+license.workspace = true
+rust-version.workspace = true
+readme = "README.md"
+
+[lints]
+workspace = true
+
+[dependencies]
+ccp_token.workspace = true
+
+[dev-dependencies]
+anyhow.workspace = true
