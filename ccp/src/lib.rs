@@ -5,6 +5,8 @@ pub use ccp_confidence as confidence;
 pub use ccp_core::*;
 pub use ccp_leader as leader;
 pub use ccp_quorum as quorum;
+pub use ccp_stake as stake;
+pub use ccp_token as token;
 pub use ccp_validator as validator;
 
 /// Names the independently composable protocol specifications.

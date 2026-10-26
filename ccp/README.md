@@ -3,7 +3,7 @@
 **Consensus as expansion and collapse over an explicit semantic carrier.**
 
 The `consensus-ccp` package groups the independent `ccp-*` specifications under one path. The core
-vocabulary sits at the root; `ccp::validator`, `ccp::quorum`, `ccp::communication`, `ccp::leader`, and `ccp::confidence`
+vocabulary sits at the root; `ccp::validator`, `ccp::stake`, `ccp::token`, `ccp::quorum`, `ccp::communication`, `ccp::leader`, and `ccp::confidence`
 name the shared specifications, and `ccp::protocols` names each protocol specification. Its Rust
 library name is `ccp`.
 

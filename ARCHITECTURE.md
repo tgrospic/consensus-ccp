@@ -40,10 +40,11 @@ input, an expansion interpretation, and laws. Storing a conclusion in a map does
 | Layer | Specification crates |
 | --- | --- |
 | Shared vocabulary and operations | `ccp-core`, `ccp-validator`, `ccp-quorum`, `ccp-communication`, `ccp-leader`, `ccp-confidence` |
+| Stake and its asset | `ccp-stake`, `ccp-token` |
 | Protocol compositions | `ccp-mysticeti`, `ccp-cordial`, `ccp-adaptive`, `ccp-dense-leader`, `ccp-nakamoto` |
 | Scenario language and comparisons | `ccp-scenarios`, `ccp-comparison` |
 | Specification grouping | `ccp` |
-| Concrete interpretations | `crates/ccp-runtime`, `crates/ccp-tests` |
+| Concrete interpretations | `crates/ccp-runtime`, `crates/ccp-tests`, `crates/ccp-stake-memory`, `crates/ccp-token-memory`, `crates/ccp-token-stake` |
 
 All specification crates live at the repository root. Each exports its vocabulary, capabilities,
 derived operations, and applicable laws. Their engineering modules remain private. The facade owns
@@ -70,7 +71,8 @@ ccp facade / concrete interpreters / examples
 
 `ccp-core` and `ccp-validator` have no dependency on any other spec. `ccp-quorum` depends only on core
 and validator;
-`ccp-nakamoto` depends only on core and confidence. Protocol specs have no sibling-protocol
+`ccp-nakamoto` depends only on core and confidence; `ccp-stake` depends only on validator, and
+`ccp-token` on no other spec. Protocol specs have no sibling-protocol
 or runtime dependencies, and no dependency on scenario or test material. Scenarios sit above them
 in `ccp-scenarios`, and cross-protocol scenarios in `ccp-comparison`.
 

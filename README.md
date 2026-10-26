@@ -165,21 +165,10 @@ The compact development context is part of the repository:
 
 - [`ARCHITECTURE.md`](ARCHITECTURE.md) maps semantic layers and extension points.
 - [`DENOTATIONAL_DESIGN.md`](DENOTATIONAL_DESIGN.md) defines design and review rules.
-- [`assets/adaptive.md`](assets/adaptive.md) states adaptive collapse and fringe projection.
-- [`assets/cordial.md`](assets/cordial.md) states Cordial Miners anchor collapse and blocklace ordering.
-- [`assets/dense_leader.md`](assets/dense_leader.md) states the unbounded >2/3-legitimacy leader-finalization
-  specification.
-- [`assets/mysticeti.md`](assets/mysticeti.md) states Mysticeti-C direct decisions, indirect repair, and prefix
-  closure.
-- [`assets/nakamoto.md`](assets/nakamoto.md) separates greatest-work prefix collapse from risk interpretation.
-- [`AGENTS.md`](AGENTS.md) gives coding agents and contributors the repository workflow and house
-  conventions.
-- [`crates/ccp-examples/src/policies.rs`](crates/ccp-examples/src/policies.rs) is an executable consumer
-  example that prints a protocol comparison matrix.
-- [`crates/ccp-examples/src/equivocations.rs`](crates/ccp-examples/src/equivocations.rs) contrasts the
-  one-message-per-slot projection with the full carrier that retains conflicting messages.
-- [`crates/ccp-examples/src/nakamoto.rs`](crates/ccp-examples/src/nakamoto.rs) demonstrates greatest-work
-  fork choice, confirmation-depth prefix projection, and separate reversal-risk interpretation.
+- [`AGENTS.md`](AGENTS.md) gives coding agents and contributors the repository workflow and house conventions.
+- [`crates/ccp-examples/src/policies.rs`](crates/ccp-examples/src/policies.rs) is an executable consumer example that prints a protocol comparison matrix.
+- [`crates/ccp-examples/src/equivocations.rs`](crates/ccp-examples/src/equivocations.rs) contrasts the one-message-per-slot projection with the full carrier that retains conflicting messages.
+- [`crates/ccp-examples/src/nakamoto.rs`](crates/ccp-examples/src/nakamoto.rs) demonstrates greatest-work fork choice, confirmation-depth prefix projection, and separate reversal-risk interpretation.
 
 Run it with:
 
@@ -253,11 +242,16 @@ assert_eq!(machine.history().messages(), vec![CandidateId(10)]);
 |- ccp-adaptive/           Adaptive specification and laws
 |- ccp-dense-leader/       dense-leader specification and laws
 |- ccp-nakamoto/           proof-of-work specification and laws
+|- ccp-stake/              proof of stake: epoch weights, rewards, and penalties
+|- ccp-token/              fungible token: balances, supply, and issuance
 |- ccp-scenarios/          scenario-authoring language and protocol scenarios
 |- ccp-comparison/         cross-protocol scenarios
 |- crates/
 |  |- ccp-runtime/         constructive carrier and machine interpreters
 |  |- ccp-tests/           concrete conformance runners
+|  |- ccp-stake-memory/    reference interpretation of ccp-stake
+|  |- ccp-token-memory/    reference interpretation of ccp-token
+|  |- ccp-token-stake/     Cosmos, Ethereum, and Cardano chains staking a native token
 |  `- ccp-examples/        executable protocol comparisons
 |- .github/                build, lint, documentation, and test automation
 |- ARCHITECTURE.md         semantic layers and extension points
@@ -282,11 +276,9 @@ The specifications are an initial design. Dense leader, Mysticeti, Cordial, and 
 
 - [ ] **Published crates:** publish only `consensus-ccp` and `consensus-ccp-runtime`. `ccp` re-exports separate spec crates, and crates.io requires every dependency of a published crate to be published, so the specs must either become modules of `ccp` or be published too.
 
-### Validator integration
+### Stake
 
-- [ ] **Stake-weighted runs:** give the runtime carrier a weighted genesis committee so scenarios exercise non-unit weights; reference interpretations currently assign unit weight.
-- [ ] **Epochs:** model one committee per epoch and the handover between epochs.
-- [ ] **Evidence feedback:** derive validator performance from CCP evidence and offenses from equivocation evidence, for validator-management systems such as `alux-stake` that implement `ccp-validator`. Decide where that bridge lives.
+- [ ] **Stake and consensus:** stake-weighted protocol runs, epochs with handover, and performance and offenses derived from CCP evidence are listed in [`ccp-stake`](ccp-stake/README.md).
 
 ### Deeper protocol coverage
 

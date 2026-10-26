@@ -11,7 +11,8 @@ candidate space they retain, the evidence horizon they observe, their collapse r
 rule.
 
 This repository is a specification and comparison library. Do not turn it into a networking,
-storage, validator-management, or node-runtime project without an explicit scope decision.
+storage, or node-runtime project without an explicit scope decision. Stake and token are specified
+as meanings; their reference interpretations live under `crates/`.
 
 ## Workspace
 
@@ -23,11 +24,14 @@ storage, validator-management, or node-runtime project without an explicit scope
 | `ccp-quorum/`, `ccp-communication/` | Attributed evidence, message sorts, message-carrier admission, evidence compositions |
 | `ccp-leader/`, `ccp-confidence/` | Scheduling and protocol-distinct confidence |
 | `ccp-mysticeti/`, `ccp-cordial/`, `ccp-adaptive/`, `ccp-dense-leader/`, `ccp-nakamoto/` | Protocol specifications and their laws |
+| `ccp-stake/`, `ccp-token/` | Proof of stake over the validator committee, and the fungible token its example chains stake |
 | `ccp-scenarios/` | Scenario-authoring language and protocol scenarios |
 | `ccp-comparison/` | Cross-protocol scenario compositions |
 | `crates/ccp-runtime/` | Constructive carrier and machine interpretations |
 | `crates/ccp-tests/` | Concrete conformance runners |
 | `crates/ccp-examples/` | Executable protocol comparisons |
+| `crates/ccp-stake-memory/`, `crates/ccp-token-memory/` | Reference stake and token interpretations |
+| `crates/ccp-token-stake/` | Chains composing token and stake |
 
 Specification crates live at the repository root. Dependencies point toward shared specs; no spec
 may depend on the facade or a concrete interpreter. Protocol specs do not depend on sibling
