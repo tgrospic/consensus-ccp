@@ -1,10 +1,10 @@
 use crate::{Policy, Source};
 use ccp_stake::{
-    BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, ExclusionAlg, ForfeitAlg, HoldingsAlg, PerformanceAlg,
-    RewardPayoutAlg, RewardShareAlg, SnapshotAlg, SnapshotLagAlg, StakeDelegationExt, StakeEscrowExt, Unbonding,
-    UnbondingAlg, UnbondingDelayAlg, WeightSourceAlg,
+    BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, EvidenceWindowAlg, ExclusionAlg, ForfeitAlg,
+    HoldingsAlg, PerformanceAlg, RewardPayoutAlg, RewardShareAlg, SnapshotAlg, SnapshotLagAlg, StakeDelegationExt,
+    StakeEscrowExt, Unbonding, UnbondingAlg, UnbondingDelayAlg, WeightSourceAlg,
 };
-use ccp_validator::QuorumThreshold;
+use ccp_validator::{ChurnLimit, QuorumThreshold};
 use std::collections::BTreeMap;
 
 /// Keeps stake in memory over accounts that are both holders and validators.
@@ -112,6 +112,17 @@ where
 
     fn snapshot_record(&mut self, epoch: u64, weights: Vec<(Account, u64)>) {
         self.snapshots.insert(epoch, weights);
+    }
+
+    fn snapshot_before(&self, epoch: &u64) -> Option<u64> {
+        self.snapshots.range(..epoch).next_back().map(|(epoch, _)| *epoch)
+    }
+}
+
+/// Admits the admitted weight, less one, divided by the policy's churn quotient.
+impl<Account> ChurnLimit for MemoryStake<Account> {
+    fn churn_limit(&self, total: u128) -> u128 {
+        total.saturating_sub(1) / u128::from(self.policy.churn_quotient)
     }
 }
 
@@ -272,6 +283,14 @@ impl<Account> UnbondingDelayAlg for MemoryStake<Account> {
 
     fn unbonding_matures(&self, start: &u64) -> u64 {
         start + self.policy.unbonding_delay
+    }
+}
+
+impl<Account> EvidenceWindowAlg for MemoryStake<Account> {
+    type Epoch = u64;
+
+    fn evidence_expires(&self, epoch: &u64) -> u64 {
+        epoch + self.policy.evidence_window
     }
 }
 

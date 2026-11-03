@@ -21,10 +21,22 @@ pub struct Policy {
     pub quorum: (u64, u64),
     /// Holds the pot each epoch emits.
     pub emission: u64,
+    /// Counts how many epochs evidence of an epoch may still be proven after it begins.
+    pub evidence_window: u64,
+    /// Divides the admitted weight, less one, into the churn limit of a snapshot.
+    pub churn_quotient: u64,
 }
 
 impl Default for Policy {
     fn default() -> Self {
-        Self { source: Source::Escrow, lag: 1, unbonding_delay: 2, quorum: (2, 3), emission: 1_000 }
+        Self {
+            source: Source::Escrow,
+            lag: 1,
+            unbonding_delay: 2,
+            quorum: (2, 3),
+            emission: 1_000,
+            evidence_window: 2,
+            churn_quotient: 8,
+        }
     }
 }

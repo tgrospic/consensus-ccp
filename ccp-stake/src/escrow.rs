@@ -100,6 +100,18 @@ pub trait ForfeitAlg {
     fn forfeit_penalty(&self, offense: &Self::Offense, stake: &Self::Amount) -> Self::Amount;
 }
 
+/// Tells how long consensus may still prove an offense committed in an epoch.
+///
+/// Stake that weighed in an epoch must still be forfeitable until evidence of that epoch expires, or
+/// a validator could leave before its offense is proven, as in a long-range attack.
+pub trait EvidenceWindowAlg {
+    /// Orders time in epochs.
+    type Epoch;
+
+    /// Returns the first epoch in which an offense committed in the given epoch is no longer acted on.
+    fn evidence_expires(&self, epoch: &Self::Epoch) -> Self::Epoch;
+}
+
 /// Derives escrowed stake: bonding, unbonding, withdrawal, and the weight it supplies.
 ///
 /// Custody holds exactly what is bonded plus what is unbonding; every operation here keeps that.

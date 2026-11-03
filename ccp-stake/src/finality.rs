@@ -1,29 +1,37 @@
 use crate::{EpochAlg, ExclusionAlg, SnapshotAlg, SnapshotLagAlg, StakeWeightExt, WeightSourceAlg};
 use alux_ext::ext;
-use ccp_validator::{QuorumThreshold, ValidatorSet, ValidatorSorts, ValidatorWeight, WeightedCommitteeExt};
+use ccp_validator::{
+    CommitteeSchedule, EpochCommittee, EpochSorts, QuorumThreshold, ValidatorSorts, WeightedCommitteeExt,
+};
 use std::{hash::Hash, ops::Add};
 
-/// Reads the validators of one epoch as a [`ccp_validator`] committee weighted by their stake.
+/// Reads epoch weights as a [`ccp_validator`] committee schedule: the committee of an epoch is every
+/// validator with weight in it, most weighty first, and each weighs its stake.
 ///
-/// The committee is every validator with weight in the epoch, and each weighs its stake. A chain
-/// with quorum finality also answers [`QuorumThreshold`], and its quorum is the committee's.
+/// Validator rotation, turnover, and quorum overlap across a handover are the schedule's, derived by
+/// [`CommitteeRotationExt`](ccp_validator::CommitteeRotationExt).
 #[derive(Debug, Clone, Copy)]
-pub struct EpochCommittee<'a, Stake: ?Sized, Epoch> {
-    /// The stake the committee is read from.
+pub struct StakeSchedule<'a, Stake: ?Sized> {
+    /// The stake the schedule is read from.
     pub stake: &'a Stake,
-    /// The epoch whose weights the committee carries.
-    pub epoch: Epoch,
 }
 
-impl<Stake, Validator, Amount, Epoch> ValidatorSorts for EpochCommittee<'_, Stake, Epoch>
+impl<Stake, Validator, Amount> ValidatorSorts for StakeSchedule<'_, Stake>
 where
-    Stake: WeightSourceAlg<Validator = Validator, Amount = Amount>,
+    Stake: WeightSourceAlg<Validator = Validator, Amount = Amount> + ?Sized,
 {
     type Validator = Validator;
     type Weight = Amount;
 }
 
-impl<Stake, Validator, Amount, Epoch> ValidatorSet for EpochCommittee<'_, Stake, Epoch>
+impl<Stake, Epoch> EpochSorts for StakeSchedule<'_, Stake>
+where
+    Stake: EpochAlg<Epoch = Epoch> + ?Sized,
+{
+    type Epoch = Epoch;
+}
+
+impl<Stake, Validator, Amount, Epoch> CommitteeSchedule for StakeSchedule<'_, Stake>
 where
     Stake: EpochAlg<Epoch = Epoch>
         + WeightSourceAlg<Validator = Validator, Amount = Amount>
@@ -34,28 +42,13 @@ where
     Amount: Copy + Ord + Default + Add<Output = Amount>,
     Epoch: Clone + Ord,
 {
-    fn validators(&self) -> Vec<Validator> {
-        self.stake.stake_weights(&self.epoch).into_iter().map(|(validator, _)| validator).collect()
+    fn committee_at(&self, epoch: &Epoch) -> Vec<(Validator, Amount)> {
+        self.stake.stake_weights(epoch)
     }
 }
 
-impl<Stake, Validator, Amount, Epoch> ValidatorWeight for EpochCommittee<'_, Stake, Epoch>
-where
-    Stake: EpochAlg<Epoch = Epoch>
-        + WeightSourceAlg<Validator = Validator, Amount = Amount>
-        + SnapshotAlg<Validator = Validator, Amount = Amount, Epoch = Epoch>
-        + SnapshotLagAlg<Epoch = Epoch>
-        + ExclusionAlg<Validator = Validator, Epoch = Epoch>,
-    Validator: PartialEq,
-    Amount: Copy + Ord + Default + Add<Output = Amount>,
-    Epoch: Clone + Ord,
-{
-    fn weight(&self, validator: &Validator) -> Amount {
-        self.stake.stake_weight(validator, &self.epoch)
-    }
-}
-
-/// Derives an epoch's committee and its quorum from epoch weights and a threshold.
+/// Derives the committee schedule, an epoch's committee, and its quorum from epoch weights and a
+/// threshold.
 #[ext(name = StakeQuorumExt)]
 pub impl<This, Validator, Amount, Epoch> This
 where
@@ -68,9 +61,14 @@ where
     Amount: Copy + Ord + Default + Add<Output = Amount> + Into<u128>,
     Epoch: Clone + Ord,
 {
+    /// Returns the committee schedule the epoch weights denote.
+    fn stake_schedule(&self) -> StakeSchedule<'_, Self> {
+        StakeSchedule { stake: self }
+    }
+
     /// Returns the committee of `epoch`, weighted by stake.
-    fn stake_committee(&self, epoch: &Epoch) -> EpochCommittee<'_, Self, Epoch> {
-        EpochCommittee { stake: self, epoch: epoch.clone() }
+    fn stake_committee(&self, epoch: &Epoch) -> EpochCommittee<StakeSchedule<'_, Self>, Epoch> {
+        EpochCommittee { schedule: self.stake_schedule(), epoch: epoch.clone() }
     }
 
     /// Says whether the voters' combined weight in the epoch decides; a repeated voter counts once.

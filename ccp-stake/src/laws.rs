@@ -1,13 +1,14 @@
 use crate::{
-    BondShortfall, BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, ExclusionAlg, ForfeitAlg, HoldingsAlg,
-    PerformanceAlg, RewardPayoutAlg, RewardShareAlg, Reweighting, SnapshotAlg, SnapshotLagAlg, StakeDelegationExt,
-    StakeEscrowExt, StakeForfeitExt, StakeQuorumExt, StakeRewardsExt, StakeRotationExt, StakeWeightExt, Unbonding,
-    UnbondingAlg, UnbondingDelayAlg, WeightSourceAlg,
+    BondShortfall, BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, EvidenceWindowAlg, ExclusionAlg,
+    ForfeitAlg, HoldingsAlg, PerformanceAlg, RewardPayoutAlg, RewardShareAlg, SnapshotAlg, SnapshotLagAlg,
+    StakeChurnExt, StakeDelegationExt, StakeEscrowExt, StakeForfeitExt, StakeQuorumExt, StakeRewardsExt,
+    StakeWeightExt, Unbonding, UnbondingAlg, UnbondingDelayAlg, WeightSourceAlg,
+    churn::{weight_distance, weight_in},
 };
 use alux_ext::ext;
 use anyhow::{Result, ensure};
 use ccp_validator::{
-    QuorumLawsExt, QuorumThreshold, ValidatorSetLawsExt, WeightedCommitteeExt, WeightedSupportLawsExt,
+    ChurnLimit, QuorumLawsExt, QuorumThreshold, ValidatorSetLawsExt, WeightedCommitteeExt, WeightedSupportLawsExt,
 };
 use std::{
     fmt::Debug,
@@ -258,9 +259,10 @@ where
     }
 }
 
-/// Checks what validator rotation means: an epoch's weights are settled before it begins, and
-/// rotation is exactly the difference between two epochs' weights.
-#[ext(name = StakeRotationLawsExt)]
+/// Checks that an epoch's weights are settled before it begins, so its committee rotates only at
+/// epoch boundaries. What rotation means is the `ccp-validator` committee schedule's, checked by
+/// `RotationLawsExt` on [`StakeSchedule`](crate::StakeSchedule).
+#[ext(name = StakeSettlementLawsExt)]
 pub impl<This, Validator, Amount, Epoch> This
 where
     This: EpochAlg<Epoch = Epoch>
@@ -288,64 +290,77 @@ where
         ensure!(self.stake_weights(&epoch) == weights, "the weights of {epoch:?} changed during it");
         Ok(())
     }
+}
 
-    /// Checks that an epoch does not rotate into itself.
-    fn check_rotation_identity(&self, epoch: &Epoch) -> Result<()> {
-        let rotation = self.stake_rotation(epoch, epoch);
-        let still = rotation.entering.is_empty() && rotation.leaving.is_empty() && rotation.reweighted.is_empty();
-        ensure!(still, "{epoch:?} rotates into itself by {rotation:?}");
-        ensure!(self.stake_turnover(epoch, epoch) == Amount::default(), "{epoch:?} turns over into itself");
-        Ok(())
-    }
-
-    /// Checks that applying the rotation from one epoch to another to the first epoch's weights gives
-    /// exactly the second epoch's weights.
-    fn check_rotation_reconstructs(&self, from: &Epoch, to: &Epoch) -> Result<()> {
-        let rotation = self.stake_rotation(from, to);
-        let mut weights: Vec<_> = self
-            .stake_weights(from)
-            .into_iter()
-            .filter(|(validator, _)| !rotation.leaving.iter().any(|(left, _)| left == validator))
-            .map(|(validator, weight)| {
-                let moved = rotation.reweighted.iter().find(|change| change.validator == validator);
-                let weight = moved.map_or(weight, |change| change.to);
-                (validator, weight)
-            })
-            .collect();
-        weights.extend(rotation.entering);
-        ensure!(same_members(&weights, &self.stake_weights(to)), "rotating {from:?} does not give {to:?}");
-        Ok(())
-    }
-
-    /// Checks that rotating back swaps who enters and who leaves, and reverses every reweighting.
-    fn check_rotation_inverse(&self, from: &Epoch, to: &Epoch) -> Result<()> {
-        let forward = self.stake_rotation(from, to);
-        let backward = self.stake_rotation(to, from);
-        let reversed: Vec<_> = forward
-            .reweighted
-            .iter()
-            .map(|change| Reweighting { validator: change.validator.clone(), from: change.to, to: change.from })
-            .collect();
-        ensure!(same_members(&backward.entering, &forward.leaving), "rotating back does not readmit who left");
-        ensure!(same_members(&backward.leaving, &forward.entering), "rotating back does not remove who entered");
-        ensure!(same_members(&backward.reweighted, &reversed), "rotating back does not reverse reweightings");
-        Ok(())
-    }
-
-    /// Checks that turnover is a distance between epochs: zero to itself, symmetric, and never
-    /// shorter through an epoch in between.
-    fn check_turnover_distance(&self, first: &Epoch, second: &Epoch, third: &Epoch) -> Result<()> {
-        let distance = |from, to| self.stake_turnover(from, to);
-        ensure!(distance(first, first) == Amount::default(), "turnover from {first:?} to itself is not zero");
-        ensure!(distance(first, second) == distance(second, first), "turnover is not symmetric");
-        let direct = distance(first, third);
-        let through = distance(first, second) + distance(second, third);
-        ensure!(direct <= through, "turnover {direct:?} exceeds {through:?} through {second:?}");
+/// Checks that the churn queue admits as much of the target as the limit allows, and nothing else.
+#[ext(name = StakeChurnLawsExt)]
+pub impl<This, Validator, Amount, Epoch> This
+where
+    This: EpochAlg<Epoch = Epoch>
+        + WeightSourceAlg<Validator = Validator, Amount = Amount>
+        + SnapshotAlg<Validator = Validator, Amount = Amount, Epoch = Epoch>
+        + SnapshotLagAlg<Epoch = Epoch>
+        + ExclusionAlg<Validator = Validator, Epoch = Epoch>
+        + ChurnLimit,
+    Validator: Clone + PartialEq + Debug,
+    Amount: Copy + Ord + Default + Debug + Add<Output = Amount> + Sub<Output = Amount> + Into<u128> + TryFrom<u128>,
+    Epoch: Clone + Ord + Debug,
+{
+    /// Checks the snapshot the queue admits in the current epoch.
+    ///
+    /// Every validator's weight moves toward its target and never past it, the turnover admitted is
+    /// the queued turnover capped by the churn limit of the admitted total (uncapped for the first
+    /// snapshot), and exactly that much leaves the queue.
+    fn check_snapshot_admit(&mut self) -> Result<()> {
+        let epoch = self.epoch();
+        let (admitted, target) = (self.stake_admitted(), self.stake_snapshot_target());
+        let pending = self.stake_churn_pending();
+        self.stake_snapshot_admit();
+        let recorded = self.snapshot(&epoch);
+        for (validator, _) in admitted.iter().chain(&target).chain(&recorded) {
+            let (before, goal) = (weight_in(&admitted, validator), weight_in(&target, validator));
+            let after = weight_in(&recorded, validator);
+            ensure!(
+                before.min(goal) <= after && after <= before.max(goal),
+                "{validator:?} moved from {before:?} to {after:?}, away from {goal:?}"
+            );
+        }
+        let total = admitted.iter().map(|(_, weight)| (*weight).into()).sum::<u128>();
+        let moved = weight_distance(&admitted, &recorded);
+        let expected = if total == 0 { pending } else { pending.min(self.churn_limit(total)) };
+        ensure!(moved == expected, "the snapshot of {epoch:?} admitted {moved} of {pending} queued, not {expected}");
+        ensure!(
+            weight_distance(&recorded, &target) == pending - moved,
+            "the queue did not shrink by what was admitted"
+        );
         Ok(())
     }
 }
 
-/// Says whether two lists hold the same distinct items, in any order.
-fn same_members<T: PartialEq>(left: &[T], right: &[T]) -> bool {
-    left.len() == right.len() && left.iter().all(|item| right.contains(item))
+/// Checks that escrowed stake still answers for every epoch it weighed until evidence of that epoch
+/// expires.
+#[ext(name = StakeAccountabilityLawsExt)]
+pub impl<This, Epoch> This
+where
+    This: SnapshotLagAlg<Epoch = Epoch> + UnbondingDelayAlg<Epoch = Epoch> + EvidenceWindowAlg<Epoch = Epoch>,
+    Epoch: Ord + Debug,
+{
+    /// Checks stake that starts unbonding in `start` against the epoch `weighed`.
+    ///
+    /// Evidence of an epoch is acted on at least during it. When the snapshot governing `weighed` was
+    /// taken before `start`, the stake still weighed in it, so it must not mature before evidence of
+    /// `weighed` expires.
+    fn check_unbonding_answers(&self, start: &Epoch, weighed: &Epoch) -> Result<()> {
+        let expires = self.evidence_expires(weighed);
+        ensure!(expires > *weighed, "evidence of {weighed:?} expires at {expires:?}, before it is acted on");
+        if self.snapshot_governing(weighed) < *start {
+            let matures = self.unbonding_matures(start);
+            ensure!(
+                matures >= expires,
+                "stake unbonding in {start:?} matures at {matures:?}, before evidence of {weighed:?} expires at \
+                 {expires:?}"
+            );
+        }
+        Ok(())
+    }
 }

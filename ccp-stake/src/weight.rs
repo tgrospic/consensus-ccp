@@ -41,6 +41,9 @@ pub trait SnapshotAlg {
 
     /// Records the weights for the epoch, replacing any earlier record.
     fn snapshot_record(&mut self, epoch: Self::Epoch, weights: Vec<(Self::Validator, Self::Amount)>);
+
+    /// Returns the latest epoch before the given one with a recorded snapshot.
+    fn snapshot_before(&self, epoch: &Self::Epoch) -> Option<Self::Epoch>;
 }
 
 /// Tells which snapshot governs weight in an epoch.
@@ -90,17 +93,28 @@ where
     Amount: Copy + Ord + Default + Add<Output = Amount>,
     Epoch: Clone + Ord,
 {
-    /// Records the current epoch's snapshot: every validator with stake that is not excluded in it.
-    fn stake_snapshot_take(&mut self) {
+    /// Returns the weights the current epoch's snapshot aims at: every validator with stake that is
+    /// not excluded in it.
+    fn stake_snapshot_target(&self) -> Vec<(Validator, Amount)> {
         let epoch = self.epoch();
-        let weights = self
-            .source_weights()
+        self.source_weights()
             .into_iter()
             .filter(|(validator, weight)| {
                 *weight > Amount::default() && self.excluded_until(validator).is_none_or(|until| until <= epoch)
             })
-            .collect();
-        self.snapshot_record(epoch, weights);
+            .collect()
+    }
+
+    /// Returns the weights the latest snapshot before the current epoch recorded, the weights already
+    /// admitted; none before the first snapshot.
+    fn stake_admitted(&self) -> Vec<(Validator, Amount)> {
+        self.snapshot_before(&self.epoch()).map(|epoch| self.snapshot(&epoch)).unwrap_or_default()
+    }
+
+    /// Records the current epoch's snapshot as its whole target, with no limit on rotation.
+    fn stake_snapshot_take(&mut self) {
+        let weights = self.stake_snapshot_target();
+        self.snapshot_record(self.epoch(), weights);
     }
 
     /// Excludes a validator until an epoch; snapshots taken before then leave it out.

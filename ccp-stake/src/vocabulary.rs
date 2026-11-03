@@ -28,26 +28,3 @@ pub struct RewardSettlement<Amount> {
     /// Holds what was earned by nobody: the share withheld for weak performance, plus any remainder.
     pub unpaid: Amount,
 }
-
-/// Holds how the weight distribution changed from one epoch to another: who entered, who left, and
-/// whose weight moved.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Rotation<Validator, Amount> {
-    /// Holds every validator weighted in the later epoch and not the earlier, with its weight.
-    pub entering: Vec<(Validator, Amount)>,
-    /// Holds every validator weighted in the earlier epoch and not the later, with its weight.
-    pub leaving: Vec<(Validator, Amount)>,
-    /// Holds every validator weighted in both epochs whose weight differs.
-    pub reweighted: Vec<Reweighting<Validator, Amount>>,
-}
-
-/// Holds one validator's weight in two epochs.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct Reweighting<Validator, Amount> {
-    /// Identifies the validator.
-    pub validator: Validator,
-    /// Holds its weight in the earlier epoch.
-    pub from: Amount,
-    /// Holds its weight in the later epoch.
-    pub to: Amount,
-}
