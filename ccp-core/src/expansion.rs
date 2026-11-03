@@ -83,11 +83,13 @@ where
     H: Clone + Eq,
     P: Clone + Eq,
 {
-    /// Returns one observation only when every reachable bounded future produces the same value.
+    /// Returns the observation determined at `history` over its bounded admissible future cone.
     ///
-    /// A future that produces no observation prevents collapse. This operation is deliberately
-    /// bounded and must not be presented as unbounded semantic closure.
-    fn bounded_invariant_collapse<Choices>(
+    /// Follows paper Definition 2.6: some future produces an observation, and every future that
+    /// produces one produces the same. A future without an observation does not prevent collapse.
+    /// This operation is deliberately bounded and must not be presented as unbounded semantic
+    /// closure.
+    fn bounded_semantic_collapse<Choices>(
         &self,
         history: &H,
         query: &Q,
@@ -97,11 +99,19 @@ where
     where
         Choices: ExpansionChoices<H, This::Input>,
     {
-        let mut observations = self
-            .expansion_future_cone(history, choices, max_steps)
+        let mut observations = self.bounded_observations(history, query, choices, max_steps).into_iter();
+        let first = observations.next()?;
+        observations.all(|observation| observation == first).then_some(first)
+    }
+
+    /// Returns the defined observations of every history in the bounded admissible future cone.
+    fn bounded_observations<Choices>(&self, history: &H, query: &Q, choices: &Choices, max_steps: usize) -> Vec<P>
+    where
+        Choices: ExpansionChoices<H, This::Input>,
+    {
+        self.expansion_future_cone(history, choices, max_steps)
             .into_iter()
-            .map(|future| self.collapse_history(&future, query));
-        let first = observations.next()??;
-        observations.all(|observation| observation.as_ref() == Some(&first)).then_some(first)
+            .filter_map(|future| self.collapse_history(&future, query))
+            .collect()
     }
 }

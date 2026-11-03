@@ -1,7 +1,7 @@
 //! Defines communication-carrier slots that identify a round and a validator.
 use crate::CommunicationSorts;
 use alux_ext::ext;
-use ccp_core::{EvidenceRelation, FollowingBoundary, HorizonMatch, SlotNumber};
+use ccp_core::{EvidenceRelation, FixedDistance, FollowingBoundary, HorizonMatch, SlotNumber};
 use ccp_quorum::{CandidateLegitimacyExt, CandidateSupport, ValidatorEvidence};
 use ccp_validator::{CommitteeOrder, ValidatorSet, ValidatorSorts, ValidatorWeight};
 use derive_more::Display;
@@ -23,6 +23,16 @@ pub struct MessageSlot<V> {
 impl<V> SlotNumber for MessageSlot<V> {
     fn slot_number(&self) -> u64 {
         self.round
+    }
+}
+
+/// Places the boundary of a message slot the fixed distance of rounds after it, for its validator.
+impl<V> FollowingBoundary<MessageSlot<V>> for FixedDistance
+where
+    V: Clone,
+{
+    fn following_boundary(&self, slot: &MessageSlot<V>) -> MessageSlot<V> {
+        MessageSlot::new(self.following_boundary(&slot.round), slot.validator.clone())
     }
 }
 

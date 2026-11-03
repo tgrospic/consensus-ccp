@@ -123,3 +123,44 @@ where
         }
     }
 }
+
+/// Checks that justification denotes a partial order on the messages of a history.
+#[ext(name = JustificationLawsExt)]
+pub impl<This, V, C> This
+where
+    This: MessageCarrier<Validator = V, Message = C> + MessageJustification,
+    V: Clone,
+    C: Clone + Eq + Hash + Debug,
+{
+    /// Checks that observation is reflexive, antisymmetric, and transitive, that every message
+    /// observes its direct justifications, and that no message justifies itself.
+    fn check_justification_order(&self) -> Result<()> {
+        let messages = self.messages();
+        messages.iter().try_for_each(|message| {
+            ensure!(self.justification_observes(message, message), "{message:?} does not observe itself");
+            self.message_justifications(message).iter().try_for_each(|target| {
+                ensure!(target != message, "{message:?} justifies itself");
+                ensure!(
+                    self.justification_observes(message, target),
+                    "{message:?} does not observe its justification {target:?}"
+                );
+                Ok(())
+            })
+        })?;
+        messages.iter().try_for_each(|first| {
+            messages.iter().filter(|second| self.justification_observes(first, second)).try_for_each(|second| {
+                ensure!(
+                    first == second || !self.justification_observes(second, first),
+                    "{first:?} and {second:?} observe each other"
+                );
+                messages.iter().filter(|third| self.justification_observes(second, third)).try_for_each(|third| {
+                    ensure!(
+                        self.justification_observes(first, third),
+                        "observation is not transitive: {first:?} -> {second:?} -> {third:?}"
+                    );
+                    Ok(())
+                })
+            })
+        })
+    }
+}

@@ -127,7 +127,33 @@ where
     H: Clone + Eq,
     C: Clone + Eq,
 {
-    /// Checks that bounded invariant collapse remains identical at a reachable later history.
+    /// Checks collapse safety at `history`: every two defined observations in its bounded admissible
+    /// future cone agree, so two reachable views never collapse a query differently.
+    ///
+    /// This is condition (ii) of paper Definition 2.6 as an obligation on the protocol collapse.
+    fn check_collapse_agreement<Choices>(
+        &self,
+        history: &H,
+        slots: &[S],
+        choices: &Choices,
+        max_steps: usize,
+    ) -> Result<()>
+    where
+        Choices: ExpansionChoices<H, This::Input>,
+        S: Debug,
+        C: Debug,
+    {
+        slots.iter().try_for_each(|slot| {
+            let observations = self.bounded_observations(history, slot, choices, max_steps);
+            ensure!(
+                observations.windows(2).all(|pair| pair[0] == pair[1]),
+                "reachable histories collapse {slot:?} differently: {observations:?}"
+            );
+            Ok(())
+        })
+    }
+
+    /// Checks that bounded semantic collapse remains identical at a reachable later history.
     fn check_collapse_monotonicity<Choices>(
         &self,
         earlier: &H,
@@ -146,9 +172,9 @@ where
             "later history is not a lawful expansion of the earlier history"
         );
         slots.iter().try_for_each(|slot| {
-            if let Some(closed) = self.bounded_invariant_collapse(earlier, slot, choices, max_steps) {
+            if let Some(closed) = self.bounded_semantic_collapse(earlier, slot, choices, max_steps) {
                 ensure!(
-                    self.bounded_invariant_collapse(later, slot, choices, max_steps).as_ref() == Some(&closed),
+                    self.bounded_semantic_collapse(later, slot, choices, max_steps).as_ref() == Some(&closed),
                     "collapse changed under lawful expansion at {slot:?}: {closed:?}"
                 );
             }
@@ -172,6 +198,56 @@ where
                 );
             }
             Ok(())
+        })
+    }
+}
+
+/// Checks that decisions after an epoch boundary extend the prefix closed before it.
+#[ext(name = HandoverLawsExt)]
+pub impl<This, H, S, C> This
+where
+    This: HistoryExpansion<H> + HistoryCollapse<H, S, Closed<C>>,
+    H: Clone + Eq,
+    C: Clone + Eq,
+{
+    /// Checks the handover at `history` between the slots `before` an epoch boundary and the slots
+    /// `after` it.
+    ///
+    /// In every history of the bounded admissible future cone, every slot before the boundary that
+    /// `history` decides keeps its observation, and no slot after the boundary is decided while a
+    /// slot before it is open. The incoming committee's decisions extend the prefix the outgoing
+    /// committee closed: they never reopen it and never pass an open slot of it.
+    fn check_handover_continuity<Choices>(
+        &self,
+        history: &H,
+        before: &[S],
+        after: &[S],
+        choices: &Choices,
+        max_steps: usize,
+    ) -> Result<()>
+    where
+        Choices: ExpansionChoices<H, This::Input>,
+        S: Debug,
+        C: Debug,
+    {
+        let decided = before.iter().map(|slot| self.collapse_history(history, slot)).collect::<Vec<_>>();
+        self.expansion_future_cone(history, choices, max_steps).iter().try_for_each(|future| {
+            let observed = before.iter().map(|slot| self.collapse_history(future, slot)).collect::<Vec<_>>();
+            before.iter().zip(decided.iter().zip(&observed)).try_for_each(|(slot, (then, now))| {
+                ensure!(then.is_none() || then == now, "the handover reopened {slot:?}: {then:?} became {now:?}");
+                Ok(())
+            })?;
+            let Some((open, _)) = before.iter().zip(&observed).find(|(_, observation)| observation.is_none()) else {
+                return Ok(());
+            };
+            after.iter().try_for_each(|slot| {
+                let observation = self.collapse_history(future, slot);
+                ensure!(
+                    observation.is_none(),
+                    "{slot:?} after the boundary is decided as {observation:?} while {open:?} before it is open"
+                );
+                Ok(())
+            })
         })
     }
 }

@@ -8,6 +8,8 @@ The core has no dependency on a validator system, communication representation, 
 
 Reference restrictions (`AllCandidates`, `EveryNthSlot`, `Unbounded`, `FixedDistance`) and the `u64` slot interpretation are concrete choices that protocol specifications select as parameters.
 
+Collapse safety is stated over bounded future cones of lawful expansion. `ExpansionCollapseLawsExt::check_collapse_agreement` is paper Definition 2.6 (ii): every two defined observations agree. `HandoverLawsExt::check_handover_continuity` states it at an epoch boundary: every slot the outgoing committee decided keeps its observation, and no slot after the boundary is decided while a slot before it is open.
+
 Concrete interpreters live under `crates/`. Portable obligations live with the capabilities they constrain.
 
 A sort family can be named without implementing any operations:
@@ -34,7 +36,7 @@ where
 
 Candidate observations and semantic closure cannot disagree about their candidate sort:
 
-```compile_fail
+```rust compile_fail
 use ccp_core::{CandidateSorts, Closed, SemanticClosure};
 struct World;
 impl CandidateSorts for World {
