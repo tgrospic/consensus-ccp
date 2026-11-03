@@ -9,4 +9,6 @@ through the public constructive machine. The immediate runner needs only communi
 Composition checks vary witness selection and threshold independently, and check the realization
 law for a positive direct-commit composition using list and set representations of evidence.
 
+The law runner also checks the Adaptive anchor laws from every observer of each Mysticeti and scheduled-leader scenario, and that every evidence view weighs a slot by its epoch's committee. `handover.rs` witnesses safety across an epoch boundary with a vote protocol whose committee changes by half: certificates weighed by their own epoch stay safe, weighing by another epoch's committee breaks agreement, and gating the next epoch on the closed prefix keeps handover continuity.
+
 Run `cargo nextest run -p consensus-ccp-tests --all-features`.

@@ -1,8 +1,10 @@
 //! Runs the specifications' laws on every history a conformance scenario reaches.
 use crate::scenario::{CollapseExpectation, History, Input, expansion};
 use anyhow::Result;
+use ccp_adaptive::{AdaptiveCollapseExt, AdaptiveDirectLawsExt, AdaptiveLawsExt, AdaptiveLeaderExt};
 use ccp_communication::{
-    ExpansionError, JustificationRelation, MessageCarrier, MessageCarrierExt, MessageSlot, ObservedRelationEvidence,
+    ExpansionError, JustificationLawsExt, JustificationRelation, MessageCarrier, MessageCarrierExt, MessageSlot,
+    ObservedRelationEvidence,
 };
 use ccp_cordial::{CordialCollapseExt, CordialLawsExt, CordialPolicy};
 use ccp_core::{
@@ -15,10 +17,13 @@ use ccp_mysticeti::{
     MysticetiCollapseViewExt, MysticetiDagEvidence, MysticetiLawsExt, MysticetiPolicy, MysticetiRepairLawsExt,
 };
 use ccp_runtime::{
-    CandidateId, CordialCollapse, CordialDagView, DenseLeaderCollapse, MysticetiCollapse, ObservedSlot,
-    ScheduledHistory, ScheduledLeaderCollapse, ScheduledLeaderView, ValidatorId,
+    AdaptiveDagView, CandidateId, CordialCollapse, CordialDagView, DenseLeaderCollapse, MysticetiCollapse,
+    ObservedSlot, ScheduledHistory, ScheduledLeaderCollapse, ScheduledLeaderView, ValidatorId,
 };
-use ccp_validator::{CommitteeLawsExt, TwoThirdsQuorum, ValidatorSet, WeightedSupportLawsExt};
+use ccp_validator::{
+    CommitteeLawsExt, CommitteeOrder, CommitteeSchedule, EpochBindingLawsExt, EpochSorts, SlotEpoch, TwoThirdsQuorum,
+    ValidatorSet, ValidatorSorts, WeightedSupportLawsExt,
+};
 
 /// Selects the protocol whose laws a scenario's collapse expectation brings into scope.
 #[derive(Debug, Clone)]
@@ -47,7 +52,8 @@ impl ProtocolLaws {
             Self::Dense => check_dense_view(history, &AllLeaderSlots),
             Self::Scheduled(policy) => {
                 check_policy_refinement(history, policy)?;
-                check_dense_view(history, policy)
+                check_dense_view(history, policy)?;
+                check_adaptive_view(history, policy)
             }
             Self::ScheduledCordial(policy) => {
                 check_policy_refinement(history, policy)?;
@@ -59,7 +65,8 @@ impl ProtocolLaws {
             }
             Self::Mysticeti(policy) => {
                 check_policy_refinement(history, policy)?;
-                check_mysticeti_view(history, policy)
+                check_mysticeti_view(history, policy)?;
+                check_adaptive_view(history, policy)
             }
         }
     }
@@ -86,6 +93,7 @@ impl ProtocolLaws {
                 let slots = earlier.message_slots();
                 let interpreted = Interpreted(MysticetiCollapse::new(policy.clone()));
                 interpreted.check_history_collapse_expansion(earlier, input, &slots)?;
+                interpreted.check_collapse_agreement(earlier, &slots, &OneInput(input.clone()), 1)?;
                 interpreted.check_collapse_monotonicity(earlier, later, &slots, &OneInput(input.clone()), 1)?;
                 mysticeti_closed_prefix(earlier, policy)
                     .check_closed_prefix_extension(&mysticeti_closed_prefix(later, policy))
@@ -99,10 +107,37 @@ pub(crate) fn check_carrier_laws(history: &History) -> Result<()> {
     history.check_candidate_space()?;
     history.check_candidate_authors()?;
     history.check_committee_order()?;
+    history.check_justification_order()?;
+    let schedule = GenesisSchedule(history);
+    history.message_slots().iter().try_for_each(|slot| schedule.check_committee_binding(history, slot))?;
     let subsets = committee_subsets(&history.validators());
     subsets.iter().try_for_each(|supporters| {
         subsets.iter().try_for_each(|others| history.check_weighted_support(&TwoThirdsQuorum, supporters, others))
     })
+}
+
+/// Reads a history's genesis committee as the committee of the one epoch every slot falls in.
+struct GenesisSchedule<'a>(&'a History);
+
+impl ValidatorSorts for GenesisSchedule<'_> {
+    type Validator = ValidatorId;
+    type Weight = u64;
+}
+
+impl EpochSorts for GenesisSchedule<'_> {
+    type Epoch = ();
+}
+
+impl CommitteeSchedule for GenesisSchedule<'_> {
+    fn committee_at(&self, _epoch: &()) -> Vec<(ValidatorId, u64)> {
+        self.0.committee_order().into_iter().map(|validator| (validator, 1)).collect()
+    }
+}
+
+impl SlotEpoch for GenesisSchedule<'_> {
+    type Slot = MessageSlot<ValidatorId>;
+
+    fn epoch_of(&self, _slot: &MessageSlot<ValidatorId>) {}
 }
 
 /// Lists every subset of `committee`, so weighted-support laws see each pair of supporter sets.
@@ -155,6 +190,7 @@ where
             .flat_map(|slot| observers(earlier).into_iter().map(move |observer| ObservedSlot::new(slot, observer)))
             .collect::<Vec<_>>();
         self.check_history_collapse_expansion(earlier, input, &queries)?;
+        self.check_collapse_agreement(earlier, &queries, &OneInput(input.clone()), 1)?;
         self.check_collapse_monotonicity(earlier, later, &queries, &OneInput(input.clone()), 1)
     }
 }
@@ -201,6 +237,28 @@ fn check_mysticeti_view(history: &History, policy: &MysticetiPolicy) -> Result<(
     let view = ScheduledHistory::new(history, policy);
     view.check_mysticeti_direct_exclusivity(&MysticetiDagEvidence::new(history, policy))?;
     view.check_mysticeti_repair_order()
+}
+
+/// Checks the Adaptive anchor laws from every observer above every frontier, and that observers
+/// finalize prefix-compatible anchors.
+fn check_adaptive_view(history: &History, policy: &MysticetiPolicy) -> Result<()> {
+    let observers = observers(history);
+    let views = observers.iter().map(|observer| AdaptiveDagView::new(history, policy, observer)).collect::<Vec<_>>();
+    history.message_slots().iter().try_for_each(|frontier| {
+        let finalized = views
+            .iter()
+            .map(|view| {
+                view.check_adaptive_direct_legitimacy(frontier, policy)?;
+                if let Some(anchor) = view.adaptive_direct_anchor(frontier, policy) {
+                    view.check_adaptive_anchor_chain(frontier, &anchor)?;
+                }
+                Ok(view.adaptive_finalizations(frontier, policy))
+            })
+            .collect::<Result<Vec<_>>>()?;
+        views.iter().zip(&finalized).try_for_each(|(view, left)| {
+            finalized.iter().try_for_each(|right| view.check_adaptive_prefix_compatibility(left, right))
+        })
+    })
 }
 
 fn mysticeti_closed_prefix(

@@ -16,6 +16,8 @@ mod expansion;
 #[cfg(test)]
 mod expectations;
 #[cfg(test)]
+mod handover;
+#[cfg(test)]
 mod law_runner;
 #[cfg(test)]
 mod mysticeti;
