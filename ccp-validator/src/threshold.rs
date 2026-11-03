@@ -67,4 +67,11 @@ where
     fn quorums_intersect(&self) -> bool {
         u128::from(self.threshold_numerator()) * 2 >= u128::from(self.threshold_denominator())
     }
+
+    /// Reports whether the weight any two quorums share always exceeds the fault bound, so a
+    /// faulty coalition within the bound cannot back two conflicting quorums. It holds from two
+    /// thirds upward.
+    fn quorums_outweigh_faults(&self) -> bool {
+        u128::from(self.threshold_numerator()) * 3 >= u128::from(self.threshold_denominator()) * 2
+    }
 }
