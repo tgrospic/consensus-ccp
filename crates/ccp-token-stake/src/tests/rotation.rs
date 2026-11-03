@@ -1,7 +1,8 @@
 use crate::tests::StakedChainAlg;
 use alux_ext::ext;
 use anyhow::Result;
-use ccp_stake::StakeRotationLawsExt;
+use ccp_stake::{StakeQuorumExt, StakeSettlementLawsExt};
+use ccp_validator::RotationLawsExt;
 
 /// States what validator rotation means on every chain, whatever moves its stake.
 #[ext(name = RotationScenariosExt)]
@@ -17,12 +18,14 @@ where
             self.check_weights_settled(|this| change(this, epoch))?;
             self.scenario_epoch_close();
         }
+        let schedule = self.stake_schedule();
         for first in 0..5 {
-            self.check_rotation_identity(&first)?;
+            schedule.check_epoch_committee(&first)?;
+            schedule.check_rotation_identity(&first)?;
             for second in 0..5 {
-                self.check_rotation_reconstructs(&first, &second)?;
-                self.check_rotation_inverse(&first, &second)?;
-                (0..5).try_for_each(|third| self.check_turnover_distance(&first, &second, &third))?;
+                schedule.check_rotation_reconstructs(&first, &second)?;
+                schedule.check_rotation_inverse(&first, &second)?;
+                (0..5).try_for_each(|third| schedule.check_turnover_distance(&first, &second, &third))?;
             }
         }
         Ok(())

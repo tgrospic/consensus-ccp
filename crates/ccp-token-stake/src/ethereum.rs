@@ -1,20 +1,20 @@
-use crate::{Account, Chain, Escrowed};
+use crate::{Account, Chain, Escrowed, SnapshotCloseAlg};
 use ccp_stake::{
-    EmissionAlg, ForfeitAlg, RewardPayoutAlg, RewardShareAlg, SnapshotLagAlg, StakeEscrowExt, StakeWeightExt,
-    UnbondingDelayAlg, WeightSourceAlg,
+    EmissionAlg, EvidenceWindowAlg, ForfeitAlg, RewardPayoutAlg, RewardShareAlg, SnapshotLagAlg, StakeChurnExt,
+    StakeEscrowExt, StakeWeightExt, UnbondingDelayAlg, WeightSourceAlg,
 };
 use ccp_token::TokenLedgerExt;
-use ccp_validator::QuorumThreshold;
+use ccp_validator::{ChurnLimit, QuorumThreshold};
 
 /// Caps how much of a validator's stake counts as weight.
 pub const MAX_EFFECTIVE_BALANCE: u128 = 2_048;
 
-/// Selects escrow with an effective balance cap, weights from the previous epoch, issuance that grows
-/// with the square root of the stake, rewards per duty performed, and forfeiting for equivocation
-/// and inactivity, with ejection.
-///
-/// TODO: rate-limit how much weight enters and leaves per epoch (the activation and exit churn
-/// limit); the stake specification has no queue between the weight source and the snapshot.
+/// Divides the admitted weight, less one, into the churn limit of an epoch.
+pub const CHURN_QUOTIENT: u128 = 8;
+
+/// Selects escrow with an effective balance cap, weights from the previous epoch admitted through an
+/// activation and exit churn queue, issuance that grows with the square root of the stake, rewards per
+/// duty performed, and forfeiting for equivocation and inactivity, with ejection.
 ///
 /// TODO: let a forfeit grow with how much other stake was forfeited in the same window (the
 /// correlation penalty); the stake specification has no observation of recent forfeits.
@@ -117,6 +117,30 @@ impl UnbondingDelayAlg for Chain<Ethereum> {
 
     fn unbonding_matures(&self, start: &u64) -> u64 {
         start + 4
+    }
+}
+
+/// Admits an eighth of the admitted weight, less one, per epoch, so quorums at two thirds intersect
+/// across every handover.
+impl ChurnLimit for Chain<Ethereum> {
+    fn churn_limit(&self, total: u128) -> u128 {
+        total.saturating_sub(1) / CHURN_QUOTIENT
+    }
+}
+
+/// Snapshots what the churn queue admits.
+impl SnapshotCloseAlg for Chain<Ethereum> {
+    fn snapshot_close(&mut self) {
+        self.stake_snapshot_admit();
+    }
+}
+
+/// Acts on evidence of an epoch for four epochs from its start, as long as unbonding takes.
+impl EvidenceWindowAlg for Chain<Ethereum> {
+    type Epoch = u64;
+
+    fn evidence_expires(&self, epoch: &u64) -> u64 {
+        epoch + 4
     }
 }
 

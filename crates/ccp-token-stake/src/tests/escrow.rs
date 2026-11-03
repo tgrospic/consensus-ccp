@@ -2,7 +2,7 @@ use crate::STAKE_POOL;
 use crate::tests::{ALICE, BOB, EscrowChainAlg, OTHER_VALIDATOR, VALIDATOR};
 use alux_ext::ext;
 use anyhow::{Result, ensure};
-use ccp_stake::StakeEscrowExt;
+use ccp_stake::{StakeAccountabilityLawsExt, StakeEscrowExt};
 use ccp_token::Shortfall;
 
 /// States what every chain whose stake is escrowed in its token ledger keeps.
@@ -45,5 +45,10 @@ where
         let refused = self.stake_bond(&ALICE, &VALIDATOR, available + 1);
         ensure!(refused == Err(Shortfall { available, requested: available + 1 }), "bonded beyond the balance");
         self.pool_holds_what_is_escrowed()
+    }
+
+    /// Checks that stake unbonding in any epoch still answers for every epoch it weighed.
+    fn scenario_unbonding_outlasts_the_evidence(&mut self) -> Result<()> {
+        (0..8).try_for_each(|start| (0..8).try_for_each(|weighed| self.check_unbonding_answers(&start, &weighed)))
     }
 }

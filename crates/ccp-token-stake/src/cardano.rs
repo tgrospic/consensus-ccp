@@ -1,7 +1,7 @@
-use crate::{Account, Chain, RESERVE};
+use crate::{Account, Chain, RESERVE, SnapshotCloseAlg};
 use ccp_stake::{
     DelegationAlg, EmissionAlg, HoldingsAlg, RewardPayoutAlg, RewardShareAlg, SnapshotLagAlg, StakeDelegationExt,
-    WeightSourceAlg,
+    StakeWeightExt, WeightSourceAlg,
 };
 use ccp_token::{BalancesAlg, TokenLedgerExt};
 
@@ -99,5 +99,12 @@ impl HoldingsAlg for Chain<Cardano> {
 
     fn holding(&self, holder: &Account) -> u128 {
         self.balance(holder)
+    }
+}
+
+/// Snapshots the whole target; rotation is not rate-limited.
+impl SnapshotCloseAlg for Chain<Cardano> {
+    fn snapshot_close(&mut self) {
+        self.stake_snapshot_take();
     }
 }

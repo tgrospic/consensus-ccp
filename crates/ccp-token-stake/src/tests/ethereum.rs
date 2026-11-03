@@ -2,8 +2,12 @@ use crate::tests::{ALICE, BOB, EscrowScenariosExt, EthereumChainAlg, OTHER_VALID
 use crate::{EthereumOffense, MAX_EFFECTIVE_BALANCE, STAKE_POOL};
 use alux_ext::ext;
 use anyhow::{Result, ensure};
-use ccp_stake::{RewardSettlement, StakeEscrowExt, StakeForfeitExt, StakeRewardsExt, StakeWeightExt};
+use ccp_stake::{
+    RewardSettlement, StakeChurnExt, StakeChurnLawsExt, StakeEscrowExt, StakeForfeitExt, StakeQuorumExt,
+    StakeRewardsExt, StakeWeightExt,
+};
 use ccp_token::TokenLedgerExt;
+use ccp_validator::{ChurnLimitLawsExt, CommitteeRotationExt, RotationLawsExt};
 
 /// States what an Ethereum-like chain adds: the effective balance cap, equivocation and inactivity
 /// forfeits, ejection, and rewards per duty.
@@ -59,6 +63,26 @@ where
         let settlement = self.stake_reward(&1);
         ensure!(settlement == RewardSettlement { paid: 120, unpaid: 40 }, "the pot was settled as {settlement:?}");
         ensure!(self.supply() == supply + 120, "issuance minted more than it paid");
+        Ok(())
+    }
+
+    fn scenario_churn_queue_spreads_rotation_over_epochs(&mut self) -> Result<()> {
+        self.stake_bond(&ALICE, &VALIDATOR, 640).unwrap();
+        self.stake_bond(&BOB, &OTHER_VALIDATOR, 640).unwrap();
+        self.scenario_epoch_close();
+        self.stake_bond(&ALICE, &20, 300).unwrap();
+        self.stake_unbond(&BOB, OTHER_VALIDATOR, 200).unwrap();
+        for _ in 1..12 {
+            self.check_snapshot_admit()?;
+            self.scenario_epoch_close();
+        }
+        ensure!(self.stake_churn_pending() == 0, "the queue never drained");
+        let entered: Vec<u128> = (1..13).map(|epoch| self.stake_weight(&20, &epoch)).collect();
+        ensure!(entered[1] < 300 && entered[11] == 300, "the entry was not spread: {entered:?}");
+        (0..3_000).try_for_each(|total| self.check_churn_limit(self, total))?;
+        let schedule = self.stake_schedule();
+        (1..12).try_for_each(|epoch| schedule.check_churn(self, self, &epoch, &(epoch + 1)))?;
+        ensure!(schedule.epoch_total(&1) > 0, "the chain began without weight");
         Ok(())
     }
 }

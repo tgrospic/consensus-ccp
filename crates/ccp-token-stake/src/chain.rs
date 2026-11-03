@@ -1,6 +1,4 @@
-use ccp_stake::{
-    EpochAlg, ExclusionAlg, PerformanceAlg, SnapshotAlg, SnapshotLagAlg, StakeWeightExt, Unbonding, WeightSourceAlg,
-};
+use ccp_stake::{EpochAlg, ExclusionAlg, PerformanceAlg, SnapshotAlg, Unbonding};
 use ccp_token::{BalancesAlg, SupplyAlg};
 use std::{collections::BTreeMap, marker::PhantomData};
 
@@ -28,13 +26,20 @@ pub struct Chain<Variant> {
     variant: PhantomData<Variant>,
 }
 
+/// Takes the snapshot of the epoch closing on a chain: the whole target, or what a churn queue
+/// admits.
+pub trait SnapshotCloseAlg {
+    /// Records the closing epoch's snapshot.
+    fn snapshot_close(&mut self);
+}
+
 impl<Variant> Chain<Variant>
 where
-    Self: WeightSourceAlg<Validator = Account, Amount = u128> + SnapshotLagAlg<Epoch = u64>,
+    Self: SnapshotCloseAlg,
 {
     /// Takes the closing epoch's snapshot and moves to the next epoch.
     pub fn epoch_close(&mut self) {
-        self.stake_snapshot_take();
+        self.snapshot_close();
         self.epoch += 1;
     }
 }
@@ -95,6 +100,10 @@ impl<Variant> SnapshotAlg for Chain<Variant> {
 
     fn snapshot_record(&mut self, epoch: u64, weights: Vec<(Account, u128)>) {
         self.snapshots.insert(epoch, weights);
+    }
+
+    fn snapshot_before(&self, epoch: &u64) -> Option<u64> {
+        self.snapshots.range(..epoch).next_back().map(|(epoch, _)| *epoch)
     }
 }
 

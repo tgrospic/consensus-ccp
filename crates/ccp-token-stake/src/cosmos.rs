@@ -1,7 +1,7 @@
-use crate::{Account, Chain, Escrowed};
+use crate::{Account, Chain, Escrowed, SnapshotCloseAlg};
 use ccp_stake::{
-    EmissionAlg, ForfeitAlg, RewardPayoutAlg, RewardShareAlg, SnapshotLagAlg, StakeEscrowExt, UnbondingDelayAlg,
-    WeightSourceAlg,
+    EmissionAlg, EvidenceWindowAlg, ForfeitAlg, RewardPayoutAlg, RewardShareAlg, SnapshotLagAlg, StakeEscrowExt,
+    StakeWeightExt, UnbondingDelayAlg, WeightSourceAlg,
 };
 use ccp_token::{SupplyAlg, TokenLedgerExt};
 use ccp_validator::QuorumThreshold;
@@ -81,6 +81,22 @@ impl UnbondingDelayAlg for Chain<Cosmos> {
 
     fn unbonding_matures(&self, start: &u64) -> u64 {
         start + 3
+    }
+}
+
+/// Acts on evidence of an epoch for three epochs from its start, as long as unbonding takes.
+impl EvidenceWindowAlg for Chain<Cosmos> {
+    type Epoch = u64;
+
+    fn evidence_expires(&self, epoch: &u64) -> u64 {
+        epoch + 3
+    }
+}
+
+/// Snapshots the whole target; rotation is not rate-limited.
+impl SnapshotCloseAlg for Chain<Cosmos> {
+    fn snapshot_close(&mut self) {
+        self.stake_snapshot_take();
     }
 }
 

@@ -1,10 +1,11 @@
-use crate::{Account, Chain, EthereumOffense};
+use crate::{Account, Chain, EthereumOffense, SnapshotCloseAlg};
 use ccp_stake::{
-    BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, ExclusionAlg, ForfeitAlg, HoldingsAlg, PerformanceAlg,
-    RewardPayoutAlg, RewardShareAlg, SnapshotAlg, SnapshotLagAlg, UnbondingAlg, UnbondingDelayAlg, WeightSourceAlg,
+    BondsAlg, CustodyAlg, DelegationAlg, EmissionAlg, EpochAlg, EvidenceWindowAlg, ExclusionAlg, ForfeitAlg,
+    HoldingsAlg, PerformanceAlg, RewardPayoutAlg, RewardShareAlg, SnapshotAlg, SnapshotLagAlg, UnbondingAlg,
+    UnbondingDelayAlg, WeightSourceAlg,
 };
 use ccp_token::{BalancesAlg, Shortfall, SupplyAlg};
-use ccp_validator::QuorumThreshold;
+use ccp_validator::{ChurnLimit, QuorumThreshold};
 use trait_set::trait_set;
 
 pub(crate) const ALICE: Account = 1;
@@ -24,7 +25,7 @@ pub(crate) trait ScenarioAlg {
 
 impl<Variant> ScenarioAlg for Chain<Variant>
 where
-    Self: WeightSourceAlg<Validator = Account, Amount = u128> + SnapshotLagAlg<Epoch = u64>,
+    Self: SnapshotCloseAlg,
 {
     fn scenario_epoch_close(&mut self) {
         self.epoch_close();
@@ -50,19 +51,20 @@ trait_set! {
         + RewardShareAlg<Validator = Account, Amount = u128, Performance = (u64, u64)>
         + RewardPayoutAlg<Validator = Account, Amount = u128>;
 
-    /// Adds escrowed stake held by the token ledger.
+    /// Adds escrowed stake held by the token ledger, and how long evidence is acted on.
     pub(crate) trait EscrowChainAlg = StakedChainAlg
         + BondsAlg<Delegator = Account, Validator = Account, Amount = u128>
         + UnbondingAlg<Delegator = Account, Validator = Account, Amount = u128, Epoch = u64>
         + UnbondingDelayAlg<Epoch = u64>
+        + EvidenceWindowAlg<Epoch = u64>
         + CustodyAlg<Delegator = Account, Amount = u128, Denial = Shortfall<u128>>;
 
     /// Adds quorum finality and forfeits priced in basis points.
     pub(crate) trait CosmosChainAlg = EscrowChainAlg + QuorumThreshold + ForfeitAlg<Offense = u128, Amount = u128>;
 
-    /// Adds quorum finality and forfeits for Ethereum's offenses.
+    /// Adds quorum finality, forfeits for Ethereum's offenses, and the churn limit.
     pub(crate) trait EthereumChainAlg =
-        EscrowChainAlg + QuorumThreshold + ForfeitAlg<Offense = EthereumOffense, Amount = u128>;
+        EscrowChainAlg + QuorumThreshold + ForfeitAlg<Offense = EthereumOffense, Amount = u128> + ChurnLimit;
 
     /// Adds delegated holdings.
     pub(crate) trait CardanoChainAlg = StakedChainAlg
