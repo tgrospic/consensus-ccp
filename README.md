@@ -133,7 +133,7 @@ preference for traits or dependency injection. See
 [`DENOTATIONAL_DESIGN.md`](DENOTATIONAL_DESIGN.md) for the lineage, limits, and CCP mapping.
 
 CCP follows specification-before-implementation. Specification crates live at the repository root;
-concrete interpreters and runners live under `crates/`, following the ALUX workspace convention.
+concrete interpreters and runners live under `crates/`.
 
 The compositional surface is:
 
@@ -232,7 +232,7 @@ assert_eq!(machine.history().messages(), vec![CandidateId(10)]);
 .
 |- ccp/                    grouping of the specifications (re-exports only)
 |- ccp-core/               candidate/collapse sorts, expansion, restrictions, realization
-|- ccp-validator/          validator committee, weight, and quorum threshold
+|- ccp-validator/          validator committee, weight, quorum threshold, and rotation
 |- ccp-quorum/             attributed evidence and weighted quorum composition
 |- ccp-communication/      message carrier, admission, and communication evidence
 |- ccp-leader/             leader scheduling and policy products
@@ -263,13 +263,12 @@ assert_eq!(machine.history().messages(), vec![CandidateId(10)]);
 
 ## TODO
 
-The specifications are an initial design. Dense leader, Mysticeti, Cordial, and Nakamoto run end to end: each has a runtime interpreter, and the conformance runners execute its laws on every reachable scenario history. The reference closure and Adaptive are specified with capabilities and laws but have no interpreter yet.
+The specifications are an initial design. Dense leader, Mysticeti, Cordial, and Nakamoto run end to end: each has a runtime interpreter, and the conformance runners execute its laws on every reachable scenario history. Adaptive has an observer view whose laws run on the same scenario histories, but no collapse yet. The reference closure is specified with capabilities and laws but has no interpreter.
 
 ### Specification coverage
 
 - [ ] **Reference closure:** add a `SemanticClosure` interpreter so `check_decision_refinement` witnesses that closed protocol decisions refine unrestricted semantic closure.
-- [ ] **Adaptive:** add a message interpreter for `CertifiedPredecessor` and `AdaptiveEvidence`, then run `check_adaptive_anchor_chain`, `check_adaptive_direct_legitimacy`, and `check_adaptive_prefix_compatibility`. The `policies` example currently collapses the Adaptive policy with the dense-leader `ScheduledLeaderCollapse`.
-- [ ] **Invariant collapse:** reconcile `bounded_invariant_collapse` with paper Definition 2.6, which requires agreement among defined observations rather than one observation on every explored history.
+- [ ] **Adaptive collapse:** add a `HistoryCollapse` over `AdaptiveDagView` so collapse agreement and handover continuity run on Adaptive, and use it in the `policies` example, which currently collapses the Adaptive policy with the dense-leader `ScheduledLeaderCollapse`.
 - [ ] **Prefix observation:** make the observation boundary explicit so the prefix-extension laws and the paper's equality criterion can be identified.
 
 ### Packaging

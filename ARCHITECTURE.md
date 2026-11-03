@@ -158,9 +158,9 @@ typed capability when that lower boundary becomes part of the executable model.
 cone by repeatedly calling the same `HistoryExpansion::expand` used by `Machine::apply`. It cannot
 author histories or edges.
 
-`bounded_invariant_collapse` returns an observation only when every history in that bounded cone
-produces the same observation. A future producing `None` prevents collapse. The bounded operation is
-not presented as proof of unbounded semantic closure.
+`bounded_semantic_collapse` follows paper Definition 2.6 over that bounded cone: it returns an observation when some history produces one and every history that produces one produces the same. A future producing `None` does not prevent collapse. `check_collapse_agreement` states the paper's safety condition as a law: every two defined observations in the bounded cone agree, so two reachable views never collapse a query differently. The conformance runners check it on every accepted expansion. The bounded operation is not presented as proof of unbounded semantic closure.
+
+Across validator epochs, safety is two laws. `ccp-validator`'s `EpochBindingLawsExt` requires every certificate to be weighed by the committee of its own slot's epoch, so conflicting certificates in one slot are accountable to that committee's fault bound whatever rotated around it. `ccp-core`'s `HandoverLawsExt::check_handover_continuity` requires decisions after an epoch boundary to extend the prefix closed before it: no future reopens a decided slot before the boundary, and none decides a slot after it while a slot before it is open. With both, each epoch needs only its own fault bound, and a churn limit matters only for clients that trust a new committee through the old one.
 
 ## Protocol meaning
 
@@ -218,11 +218,7 @@ interpretations using the same constructive carrier, not two independent consens
 
 ## Remaining semantic boundaries
 
-Paper Definition 2.6 requires at least one defined observation and agreement among all defined
-observations in the admissible future cone. `bounded_invariant_collapse` instead requires every
-explored history, including the initial history, to have the same defined observation. Its stronger
-finite condition remains a separate analysis operation. `SemanticClosure` still names an oracle
-capability; this reorganization does not supply an unbounded closure interpreter.
+`SemanticClosure` still names an oracle capability; this reorganization does not supply an unbounded closure interpreter.
 
 For a growing output, preservation of an emitted prefix must be distinguished from equality of a
 fixed terminal observation. The existing prefix-extension laws express growth; the paper's equality

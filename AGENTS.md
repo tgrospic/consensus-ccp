@@ -20,7 +20,7 @@ as meanings; their reference interpretations live under `crates/`.
 | --- | --- |
 | `ccp/` | Grouping of the specifications; re-exports specs only |
 | `ccp-core/` | Candidate and collapse sorts, expansion, restrictions, realization |
-| `ccp-validator/` | Validator committee, weight, order, and weighted quorum threshold |
+| `ccp-validator/` | Validator committee, weight, order, weighted quorum threshold, and rotation across epochs |
 | `ccp-quorum/`, `ccp-communication/` | Attributed evidence, message sorts, message-carrier admission, evidence compositions |
 | `ccp-leader/`, `ccp-confidence/` | Scheduling and protocol-distinct confidence |
 | `ccp-mysticeti/`, `ccp-cordial/`, `ccp-adaptive/`, `ccp-dense-leader/`, `ccp-nakamoto/` | Protocol specifications and their laws |
