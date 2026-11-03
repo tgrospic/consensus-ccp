@@ -1,5 +1,6 @@
 //! Executes CCP histories exclusively through constructive expansion capabilities.
 
+mod adaptive;
 mod communication;
 mod cordial;
 mod dense_leader;
@@ -7,6 +8,7 @@ mod identity;
 mod machine;
 mod mysticeti;
 mod pow;
+pub use adaptive::*;
 pub use communication::*;
 pub use cordial::*;
 pub use dense_leader::*;

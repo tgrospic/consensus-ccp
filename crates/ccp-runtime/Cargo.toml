@@ -13,6 +13,7 @@ license.workspace = true
 name = "ccp_runtime"
 
 [dependencies]
+ccp_adaptive.workspace = true
 ccp_communication.workspace = true
 ccp_confidence.workspace = true
 ccp_cordial.workspace = true
